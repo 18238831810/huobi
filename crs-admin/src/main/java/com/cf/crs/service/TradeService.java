@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 
+/**
+ * 订单
+ */
 @Slf4j
 @Service
 public class TradeService {
