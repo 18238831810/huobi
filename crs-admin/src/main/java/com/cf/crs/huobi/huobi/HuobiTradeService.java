@@ -287,7 +287,7 @@ public class HuobiTradeService implements TradeClient {
     return new FeeRateParser().parseArray(array);
   }
 
-
+  @Override
   public void subOrderUpdateV2(SubOrderUpdateV2Request request, ResponseCallback<OrderUpdateV2Event> callback) {
     // 检查参数
     InputChecker.checker()
