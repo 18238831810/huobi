@@ -315,6 +315,7 @@ public class HuobiTradeService implements TradeClient {
     HuobiWebSocketConnection.createAssetV2Connection(options, commandList, new OrderUpdateEventV2Parser(), callback, false);
   }
 
+  @Override
   public void subTradeClearing(SubTradeClearingRequest request, ResponseCallback<TradeClearingEvent> callback) {
     // 检查参数
     InputChecker.checker()
