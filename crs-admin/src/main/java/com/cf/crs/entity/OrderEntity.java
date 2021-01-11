@@ -37,7 +37,7 @@ public class OrderEntity {
     private String price;
 
     /**
-     * 订单价格（对市价单无效）
+     * 订单交易量（市价买单为订单交易额）
      */
     private String amount;
 
