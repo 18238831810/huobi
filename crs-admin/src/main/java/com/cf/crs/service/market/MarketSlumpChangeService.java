@@ -26,11 +26,10 @@ public class MarketSlumpChangeService {
 
     public List<OrderEntity> getSlumpChangeOrders(SlumpRequest slumpRequest) {
         HuobiMarketService huobiMarketService = new HuobiMarketService(new HuobiOptions());
-        CandlestickRequest candlestickRequest = new CandlestickRequest();
-        candlestickRequest.setSymbol(slumpRequest.getCoinsEnum().getSymbol());
-        candlestickRequest.setInterval(slumpRequest.getCandlestickIntervalEnum());
-        //只拉取上一个小时行情的数据进行分析
-        candlestickRequest.setSize(1);
+        CandlestickRequest candlestickRequest= CandlestickRequest.builder()
+                .symbol(slumpRequest.getCoinsEnum().getSymbol())
+                .interval(slumpRequest.getCandlestickIntervalEnum())
+                .size(1).build();
         List<Candlestick> candlestickList = huobiMarketService.getCandlestick(candlestickRequest);
         if (CollectionUtils.isEmpty(candlestickList))
         {
