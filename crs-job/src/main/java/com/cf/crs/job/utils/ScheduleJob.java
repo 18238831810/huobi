@@ -71,8 +71,8 @@ public class ScheduleJob extends QuartzJobBean {
 			shecduleLog.setError(ExceptionUtils.getErrorStackTrace(e));
 		}finally {
 			//获取spring bean
-			ScheduleJobLogService scheduleJobLogService = SpringContextUtils.getBean(ScheduleJobLogService.class);
-			scheduleJobLogService.insert(shecduleLog);
+			//ScheduleJobLogService scheduleJobLogService = SpringContextUtils.getBean(ScheduleJobLogService.class);
+			//scheduleJobLogService.insert(shecduleLog);
 		}
     }
 }
