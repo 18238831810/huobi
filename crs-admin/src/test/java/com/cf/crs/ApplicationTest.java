@@ -35,7 +35,7 @@ public class ApplicationTest {
     public void testSlump()
     {
         SlumpRequest  slumpRequest = SlumpRequest.builder().candlestickIntervalEnum(CandlestickIntervalEnum.MIN60)
-                .coinsEnum(CoinsEnum.BTC).requestUsdt(500).build();
+                .coinsEnum(CoinsEnum.BTC).totalUsdt(500).build();
         marketSlumpChangeService.getSlumpChangeOrders(slumpRequest);
     }
 

@@ -15,9 +15,18 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class SlumpRequest {
 
+    /**
+     * 币参数配置
+     */
     private CoinsEnum coinsEnum;
 
+    /**
+     * K线时长参数
+     */
     private CandlestickIntervalEnum candlestickIntervalEnum;
 
-    private double requestUsdt;
+    /**
+     * 下单的总金额
+     */
+    private double totalUsdt;
 }
