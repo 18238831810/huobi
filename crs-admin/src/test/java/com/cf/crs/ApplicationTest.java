@@ -3,10 +3,14 @@ package com.cf.crs;
 
 import com.alibaba.fastjson.JSON;
 import com.cf.crs.entity.OrderEntity;
+import com.cf.crs.huobi.constant.enums.CandlestickIntervalEnum;
 import com.cf.crs.huobi.model.account.Account;
 import com.cf.crs.huobi.model.account.AccountBalance;
 import com.cf.crs.service.AccountService;
 import com.cf.crs.service.TradeService;
+import com.cf.crs.service.market.CoinsEnum;
+import com.cf.crs.service.market.MarketSlumpChangeService;
+import com.cf.crs.service.market.SlumpRequest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +27,19 @@ public class ApplicationTest {
 
     @Autowired
     TradeService tradeService;
+
+    @Autowired
+    MarketSlumpChangeService marketSlumpChangeService;
+
+    @Test
+    public void testSlump()
+    {
+        SlumpRequest  slumpRequest = new SlumpRequest();
+        slumpRequest.setCandlestickIntervalEnum(CandlestickIntervalEnum.MIN60);
+        slumpRequest.setCoinsEnum(CoinsEnum.BTC);
+        slumpRequest.setRequestUsdt(500);
+        marketSlumpChangeService.getSlumpChangeOrders(slumpRequest);
+    }
 
     /**
      * 获取用户信息

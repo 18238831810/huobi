@@ -24,28 +24,36 @@ import java.util.List;
 public class MarketSlumpChangeService {
 
 
-    public List<OrderEntity> getSlumpChangeOrders(CoinsEnum coinsEnum, CandlestickIntervalEnum candlestickIntervalEnum) {
+    public List<OrderEntity> getSlumpChangeOrders(SlumpRequest slumpRequest) {
         HuobiMarketService huobiMarketService = new HuobiMarketService(new HuobiOptions());
         CandlestickRequest candlestickRequest = new CandlestickRequest();
-        candlestickRequest.setSymbol(coinsEnum.getSymbol());
-        candlestickRequest.setInterval(candlestickIntervalEnum);
+        candlestickRequest.setSymbol(slumpRequest.getCoinsEnum().getSymbol());
+        candlestickRequest.setInterval(slumpRequest.getCandlestickIntervalEnum());
         //只拉取上一个小时行情的数据进行分析
         candlestickRequest.setSize(1);
-        List<Candlestick> candlestickList = huobiMarketService.getCandlestick(new CandlestickRequest());
-        if (CollectionUtils.isEmpty(candlestickList)) return null;
-        return getSlumpChangeFromCandlestick(candlestickList.get(0), coinsEnum);
+        List<Candlestick> candlestickList = huobiMarketService.getCandlestick(candlestickRequest);
+        if (CollectionUtils.isEmpty(candlestickList))
+        {
+            log.warn("symbol->{} Interval->{} 's Candlestick is null",slumpRequest.getCoinsEnum().getSymbol(),slumpRequest.getCandlestickIntervalEnum().getCode());
+            return null;
+        }
+        return getSlumpChangeFromCandlestick(candlestickList.get(0),  slumpRequest);
     }
 
-    private List<OrderEntity> getSlumpChangeFromCandlestick(Candlestick candlestick, CoinsEnum coinsEnum) {
+    private List<OrderEntity> getSlumpChangeFromCandlestick(Candlestick candlestick, SlumpRequest slumpRequest) {
 
         Long dayHour = DateUtils.stringToDate(DateUtils.format(new Date(), "yyyyMMddHH"), "yyyyMMddHH").getTime();
         //如何获取的行情不对的话就不下单
-        if (candlestick.getId() >= dayHour) return null;
+        if (candlestick.getId() >= dayHour)
+        {
+            log.warn("id->{} > dayHour->{} ",candlestick.getId(),dayHour);
+            return null;
+        }
 
         List<OrderEntity> result = new ArrayList<>();
         SlumpPointEnum[] slumpPointEnums = SlumpPointEnum.values();
         for (SlumpPointEnum slumpPointEnum : slumpPointEnums) {
-            OrderEntity orderEntity = getTradeOut(candlestick, slumpPointEnum, coinsEnum);
+            OrderEntity orderEntity = getTradeOut(candlestick,slumpPointEnum, slumpRequest);
             result.add(orderEntity);
         }
         return result;
@@ -53,22 +61,19 @@ public class MarketSlumpChangeService {
 
     /**
      * 生成挂单订单
-     * apiKey，secretKey，symbol，price，amount，sellPrice，cancelTime
-     *
      * @param candlestick
-     * @param slumpPointEnum
-     * @param coinsEnum
+     * @param slumpRequest
      * @return
      */
-    private OrderEntity getTradeOut(Candlestick candlestick, SlumpPointEnum slumpPointEnum, CoinsEnum coinsEnum) {
+    private OrderEntity getTradeOut(Candlestick candlestick,SlumpPointEnum slumpPointEnum, SlumpRequest slumpRequest) {
         OrderEntity orderEntity = new OrderEntity();
-        orderEntity.setSymbol(coinsEnum.getSymbol());
+        orderEntity.setSymbol(slumpRequest.getCoinsEnum().getSymbol());
         //下单的价格
-        BigDecimal tradeOutPrice = candlestick.getLow().multiply(BigDecimal.valueOf(100 - slumpPointEnum.getSlumpPoint())).divide(BigDecimal.valueOf(100), coinsEnum.getPrizeScale(), BigDecimal.ROUND_DOWN);
+        BigDecimal tradeOutPrice = candlestick.getLow().multiply(BigDecimal.valueOf(100 - slumpPointEnum.getSlumpPoint())).divide(BigDecimal.valueOf(100), slumpRequest.getCoinsEnum().getPrizeScale(), BigDecimal.ROUND_DOWN);
         orderEntity.setSellPrice(tradeOutPrice.toString());
 
         //下单的数量
-        BigDecimal bigDecimal = BigDecimal.valueOf(MarketConsts.ORDER_USDT_TOTAL).multiply(BigDecimal.valueOf(slumpPointEnum.getSlumpPoint())).divide(tradeOutPrice, coinsEnum.getAmountScale(), BigDecimal.ROUND_DOWN);
+        BigDecimal bigDecimal = BigDecimal.valueOf(slumpRequest.getRequestUsdt()).multiply(BigDecimal.valueOf(slumpPointEnum.getSlumpPoint())).divide(tradeOutPrice, slumpRequest.getCoinsEnum().getAmountScale(), BigDecimal.ROUND_DOWN);
         orderEntity.setAmount(bigDecimal.toString());
         //撤单时间为下下单时间的下一个小时，也是行情的下下个小时
         orderEntity.setCancelTime(candlestick.getId() + 2 * 60 * 60);
