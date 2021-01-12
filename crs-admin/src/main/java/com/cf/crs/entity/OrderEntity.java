@@ -2,6 +2,7 @@ package com.cf.crs.entity;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 
 /**
@@ -10,6 +11,7 @@ import lombok.Data;
  */
 @Data
 @Builder
+@NoArgsConstructor
 public class OrderEntity {
 
     private String apiKey;
