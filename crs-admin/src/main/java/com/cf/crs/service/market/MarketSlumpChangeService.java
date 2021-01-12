@@ -72,7 +72,7 @@ public class MarketSlumpChangeService {
         orderEntity.setSellPrice(tradeOutPrice.toString());
 
         //下单的数量
-        BigDecimal bigDecimal = BigDecimal.valueOf(slumpRequest.getTotalUsdt()).multiply(BigDecimal.valueOf(slumpPointEnum.getSlumpPoint())).divide(tradeOutPrice, slumpRequest.getCoinsEnum().getAmountScale(), BigDecimal.ROUND_DOWN);
+        BigDecimal bigDecimal = BigDecimal.valueOf(slumpRequest.getTotalUsdt()).multiply(BigDecimal.valueOf(slumpPointEnum.getCapitalPoint())).divide(tradeOutPrice, slumpRequest.getCoinsEnum().getAmountScale(), BigDecimal.ROUND_DOWN);
         orderEntity.setAmount(bigDecimal.toString());
         //撤单时间为下下单时间的下一个小时，也是行情的下下个小时
         orderEntity.setCancelTime(candlestick.getId() + 2 * 60 * 60);

@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.List;
+
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class ApplicationTest {
@@ -36,7 +38,10 @@ public class ApplicationTest {
     {
         SlumpRequest  slumpRequest = SlumpRequest.builder().candlestickIntervalEnum(CandlestickIntervalEnum.MIN60)
                 .coinsEnum(CoinsEnum.BTC).totalUsdt(500).build();
-        marketSlumpChangeService.getSlumpChangeOrders(slumpRequest);
+        List<OrderEntity> orderEntities= marketSlumpChangeService.getSlumpChangeOrders(slumpRequest);
+        for (OrderEntity orderEntity:orderEntities) {
+            System.out.println(orderEntity);
+        }
     }
 
     /**
