@@ -67,13 +67,21 @@ public class MarketSlumpChangeService {
     private OrderEntity getTradeOut(Candlestick candlestick,SlumpPointEnum slumpPointEnum, SlumpRequest slumpRequest) {
         OrderEntity orderEntity = new OrderEntity();
         orderEntity.setSymbol(slumpRequest.getCoinsEnum().getSymbol());
+        orderEntity.setInitialPrice(candlestick.getLow().toString());
         //下单的价格
-        BigDecimal tradeOutPrice = candlestick.getLow().multiply(BigDecimal.valueOf(100 - slumpPointEnum.getSlumpPoint())).divide(BigDecimal.valueOf(100), slumpRequest.getCoinsEnum().getPrizeScale(), BigDecimal.ROUND_DOWN);
-        orderEntity.setSellPrice(tradeOutPrice.toString());
+        BigDecimal buyPrice = candlestick.getLow().multiply(BigDecimal.valueOf(100 - slumpPointEnum.getSlumpPoint())).divide(BigDecimal.valueOf(100), slumpRequest.getCoinsEnum().getPrizeScale(), BigDecimal.ROUND_DOWN);
 
-        //下单的数量
-        BigDecimal bigDecimal = BigDecimal.valueOf(slumpRequest.getTotalUsdt()).multiply(BigDecimal.valueOf(slumpPointEnum.getCapitalPoint())).divide(tradeOutPrice, slumpRequest.getCoinsEnum().getAmountScale(), BigDecimal.ROUND_DOWN);
+
+        //下单的数量,暂时没有算手续费,需要后期查询此单时实际成交的量
+        BigDecimal bigDecimal = BigDecimal.valueOf(slumpRequest.getTotalUsdt()).multiply(BigDecimal.valueOf(slumpPointEnum.getCapitalPoint())).divide(buyPrice, slumpRequest.getCoinsEnum().getAmountScale(), BigDecimal.ROUND_DOWN);
         orderEntity.setAmount(bigDecimal.toString());
+
+        //挂卖出涨幅
+        BigDecimal sellAllPoint =BigDecimal.valueOf(slumpPointEnum.getSellPoint()).divide(BigDecimal.valueOf(100));
+        //挂卖出单的价
+        BigDecimal sellPrice=buyPrice.multiply(BigDecimal.valueOf(1).add(sellAllPoint)).setScale(slumpRequest.getCoinsEnum().getPrizeScale(), BigDecimal.ROUND_DOWN);
+        orderEntity.setSellPrice(sellPrice.toString());
+
         //撤单时间为下下单时间的下一个小时，也是行情的下下个小时
         orderEntity.setCancelTime(candlestick.getId() + 2 * 60 * 60);
 

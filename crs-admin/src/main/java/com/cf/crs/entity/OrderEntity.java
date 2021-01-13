@@ -75,4 +75,9 @@ public class OrderEntity {
      */
     private Long cancelTime;
 
+    /**
+     * 当时原始价格（方便后面对比）
+     */
+    private String  initialPrice;
+
 }
