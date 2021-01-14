@@ -7,8 +7,8 @@ import lombok.Setter;
  * 币参数配置
  */
 public enum CoinsEnum {
-    BTC("btcusdt", 6, 1),
-    ETH("ethusdt", 6, 1);
+    BTC_USDT("btcusdt", 6, 1),
+    ETH_USDT("ethusdt", 6, 1);
 
     /**
      * 代币

@@ -4,7 +4,6 @@ import com.cf.crs.common.utils.DateUtils;
 import com.cf.crs.entity.OrderEntity;
 import com.cf.crs.huobi.client.req.market.CandlestickRequest;
 import com.cf.crs.huobi.constant.HuobiOptions;
-import com.cf.crs.huobi.constant.enums.CandlestickIntervalEnum;
 import com.cf.crs.huobi.huobi.HuobiMarketService;
 import com.cf.crs.huobi.model.market.Candlestick;
 import lombok.extern.slf4j.Slf4j;

@@ -7,7 +7,7 @@ import lombok.Setter;
  * 暴跌参数配置
  */
 public enum SlumpPointEnum {
-    STEP_ONE_POINT(3, 0.1,5),
+    STEP_ONE_POINT(3.4, 0.1,5),
     STEP_TWO_POINT(5, 0.2,6.5),
     STEP_THREE_POINT(7, 0.3,7.5),
     STEP_FOUR_POINT(10, 0.4,8.5);
@@ -33,7 +33,7 @@ public enum SlumpPointEnum {
     @Getter
     private double sellPoint;
 
-    SlumpPointEnum(int slumpPoint, double capitalPoint,double sellPoint) {
+    SlumpPointEnum(double slumpPoint, double capitalPoint,double sellPoint) {
         this.slumpPoint = slumpPoint;
         this.capitalPoint = capitalPoint;
         this.sellPoint=sellPoint;
