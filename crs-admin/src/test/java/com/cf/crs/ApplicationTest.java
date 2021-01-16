@@ -74,9 +74,6 @@ public class ApplicationTest {
 
     @Test
     public void getOrder(){
-        List<BuyLimit> list = tradeService.getBuyLimitList();
-        for (BuyLimit buyLimit : list) {
-            tradeService.getOrder(buyLimit);
-        }
+        tradeService.synBuyLimit();
     }
 }

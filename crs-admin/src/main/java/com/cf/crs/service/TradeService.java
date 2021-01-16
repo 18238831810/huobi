@@ -88,6 +88,17 @@ public class TradeService {
 
 
     /**
+     * 定时处理挂单数据
+     */
+    public void synBuyLimit(){
+        List<BuyLimit> list = getBuyLimitList();
+        for (BuyLimit buyLimit : list) {
+            workOrder(buyLimit);
+        }
+    }
+
+
+    /**
      * 获取等待中的订单
      * @return
      */
@@ -100,7 +111,7 @@ public class TradeService {
      * @param buyLimit
      * @return
      */
-    public void getOrder(BuyLimit buyLimit){
+    public void workOrder(BuyLimit buyLimit){
         TradeClient tradeClient = getTradeClient(buyLimit.getApiKey(),buyLimit.getSecretKey());
         try {
             Order order = tradeClient.getOrder(buyLimit.getOrderId());
