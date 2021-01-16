@@ -1,6 +1,7 @@
 package com.cf.crs.service;
 
 
+import com.alibaba.fastjson.JSON;
 import com.cf.crs.entity.BuyLimit;
 import com.cf.crs.entity.OrderEntity;
 import com.cf.crs.huobi.client.TradeClient;
@@ -9,7 +10,6 @@ import com.cf.crs.huobi.constant.HuobiOptions;
 import com.cf.crs.huobi.model.account.Account;
 import com.cf.crs.mapper.BuyLimitMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.annotations.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -52,11 +52,20 @@ public class TradeService {
         TradeClient tradeClient = getTradeClient(apiKey, secretKey);
         Account account = accountService.getAccount(apiKey, secretKey);
         if (account == null) return null;
-        //Long orderId = tradeClient.createOrder(CreateOrderRequest.spotBuyLimit(account.getId(),orderEntity.getSymbol(), new BigDecimal(orderEntity.getPrice()), new BigDecimal(orderEntity.getAmount())));
-        //限价下单，存入数据库
-        saveBuyLimitOrder(orderEntity, apiKey, secretKey, account);
+        try {
+            Long orderId = tradeClient.createOrder(CreateOrderRequest.spotBuyLimit(account.getId(),orderEntity.getSymbol(), new BigDecimal(orderEntity.getPrice()), new BigDecimal(orderEntity.getAmount())));
+            //限价下单，存入数据库
+            log.info("限价下单成功:{},{}",orderId, JSON.toJSONString(orderEntity));
+            //此处最好有短信提醒
 
-        return 1L;
+            //下单数据入库
+            saveBuyLimitOrder(orderEntity, apiKey, secretKey, account,orderId);
+            return 1L;
+        } catch (Exception e) {
+            log.info("限价下单失败:{}", JSON.toJSONString(orderEntity));
+            log.error(e.getMessage(),e);
+            return null;
+        }
     }
 
     /**
@@ -66,11 +75,11 @@ public class TradeService {
      * @param secretKey
      * @param account
      */
-    private void saveBuyLimitOrder(OrderEntity orderEntity, String apiKey, String secretKey, Account account) {
+    private void saveBuyLimitOrder(OrderEntity orderEntity, String apiKey, String secretKey, Account account,Long orderId) {
         BuyLimit build = BuyLimit.builder().apiKey(apiKey).secretKey(secretKey).accountId(account.getId()).
                 price(orderEntity.getPrice()).amount(orderEntity.getAmount()).symbol(orderEntity.getSymbol()).
                 sellPrice(orderEntity.getSellPrice()).createTime(System.currentTimeMillis()).
-                cancelTime(orderEntity.getCancelTime()).status(0).build();
+                cancelTime(orderEntity.getCancelTime()).status(0).orderId(orderId).build();
         buyLimitMapper.insert(build);
     }
 
