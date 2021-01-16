@@ -2,6 +2,7 @@ package com.cf.crs;
 
 
 import com.alibaba.fastjson.JSON;
+import com.cf.crs.entity.BuyLimit;
 import com.cf.crs.entity.OrderEntity;
 import com.cf.crs.huobi.constant.enums.CandlestickIntervalEnum;
 import com.cf.crs.huobi.model.account.Account;
@@ -68,5 +69,14 @@ public class ApplicationTest {
                 amount("0.000239").sellPrice("38871.19").cancelTime(System.currentTimeMillis()).build();
         Long order = tradeService.createOrder(orderEntity);
         System.out.println(order);
+    }
+
+
+    @Test
+    public void getOrder(){
+        List<BuyLimit> list = tradeService.getBuyLimitList();
+        for (BuyLimit buyLimit : list) {
+            tradeService.getOrder(buyLimit);
+        }
     }
 }
