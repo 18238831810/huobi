@@ -4,9 +4,12 @@ import com.cf.crs.common.utils.DateUtils;
 import com.cf.crs.entity.OrderEntity;
 import com.cf.crs.huobi.client.req.market.CandlestickRequest;
 import com.cf.crs.huobi.constant.HuobiOptions;
+import com.cf.crs.huobi.constant.enums.CandlestickIntervalEnum;
 import com.cf.crs.huobi.huobi.HuobiMarketService;
 import com.cf.crs.huobi.model.market.Candlestick;
+import com.cf.crs.service.TradeService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -22,8 +25,21 @@ import java.util.List;
 @Slf4j
 public class MarketSlumpChangeService {
 
+    @Autowired
+    TradeService tradeService;
 
-    public List<OrderEntity> getSlumpChangeOrders(SlumpRequest slumpRequest) {
+    private void saveSlumpChangeOrders( )
+    {
+        SlumpRequest  slumpRequest = SlumpRequest.builder().candlestickIntervalEnum(CandlestickIntervalEnum.MIN60)
+                .coinsEnum(CoinsEnum.BTC_USDT).totalUsdt(500).build();
+        List<OrderEntity> orderEntities= this.saveSlumpChangeOrders(slumpRequest);
+        for (OrderEntity orderEntity:orderEntities) {
+            System.out.println(orderEntity);
+            tradeService.createOrder(orderEntity);
+        }
+    }
+
+    public List<OrderEntity> saveSlumpChangeOrders(SlumpRequest slumpRequest) {
         HuobiMarketService huobiMarketService = new HuobiMarketService(new HuobiOptions());
         CandlestickRequest candlestickRequest= CandlestickRequest.builder()
                 .symbol(slumpRequest.getCoinsEnum().getSymbol())

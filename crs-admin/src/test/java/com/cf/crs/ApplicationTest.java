@@ -39,7 +39,7 @@ public class ApplicationTest {
     {
         SlumpRequest  slumpRequest = SlumpRequest.builder().candlestickIntervalEnum(CandlestickIntervalEnum.MIN60)
                 .coinsEnum(CoinsEnum.BTC_USDT).totalUsdt(500).build();
-        List<OrderEntity> orderEntities= marketSlumpChangeService.getSlumpChangeOrders(slumpRequest);
+        List<OrderEntity> orderEntities= marketSlumpChangeService.saveSlumpChangeOrders(slumpRequest);
         for (OrderEntity orderEntity:orderEntities) {
             System.out.println(orderEntity);
         }
