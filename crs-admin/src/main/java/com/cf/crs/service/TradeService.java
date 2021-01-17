@@ -62,7 +62,7 @@ public class TradeService {
             //此处最好有短信提醒
 
             //下单数据入库
-            saveBuyLimitOrder(orderEntity, apiKey, secretKey, account,orderId);
+            saveBuyLimitOrder(orderEntity,account,orderId);
             return 1L;
         } catch (Exception e) {
             log.info("限价下单失败:{}", JSON.toJSONString(orderEntity));
@@ -74,12 +74,10 @@ public class TradeService {
     /**
      * 限价下单入库
      * @param orderEntity
-     * @param apiKey
-     * @param secretKey
      * @param account
      */
-    private void saveBuyLimitOrder(OrderEntity orderEntity, String apiKey, String secretKey, Account account,Long orderId) {
-        BuyLimit buyLimit = BuyLimit.builder().apiKey(apiKey).secretKey(secretKey).accountId(account.getId()).
+    private void saveBuyLimitOrder(OrderEntity orderEntity,Account account,Long orderId) {
+        BuyLimit buyLimit = BuyLimit.builder().apiKey(orderEntity.getApiKey()).secretKey(orderEntity.getSecretKey()).accountId(account.getId()).
                 price(orderEntity.getPrice()).amount(orderEntity.getAmount()).symbol(orderEntity.getSymbol()).
                 sellPrice(orderEntity.getSellPrice()).createTime(System.currentTimeMillis()).
                 cancelTime(orderEntity.getCancelTime()).status(0).orderId(orderId).build();
