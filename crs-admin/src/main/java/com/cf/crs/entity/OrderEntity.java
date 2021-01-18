@@ -80,4 +80,6 @@ public class OrderEntity {
      */
     private String  initialPrice;
 
+    private Long accountId;
+
 }

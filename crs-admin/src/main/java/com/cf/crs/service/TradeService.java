@@ -53,16 +53,16 @@ public class TradeService {
         String apiKey = orderEntity.getApiKey();
         String secretKey = orderEntity.getSecretKey();
         TradeClient tradeClient = getTradeClient(apiKey, secretKey);
-        Account account = accountService.getAccount(apiKey, secretKey);
-        if (account == null) return null;
+        //Account account = accountService.getAccount(apiKey, secretKey);
+        //if (account == null) return null;
         try {
-            Long orderId = tradeClient.createOrder(CreateOrderRequest.spotBuyLimit(account.getId(),orderEntity.getSymbol(), new BigDecimal(orderEntity.getPrice()), new BigDecimal(orderEntity.getAmount())));
+            //Long orderId = tradeClient.createOrder(CreateOrderRequest.spotBuyLimit(account.getId(),orderEntity.getSymbol(), new BigDecimal(orderEntity.getPrice()), new BigDecimal(orderEntity.getAmount())));
             //限价下单，存入数据库
-            log.info("限价下单成功:{},{}",orderId, JSON.toJSONString(orderEntity));
+            log.info("限价下单成功:{},{}",orderEntity.getAccountId(), JSON.toJSONString(orderEntity));
             //此处最好有短信提醒
 
             //下单数据入库
-            saveBuyLimitOrder(orderEntity,account,orderId);
+            saveBuyLimitOrder(orderEntity,0L);
             return 1L;
         } catch (Exception e) {
             log.info("限价下单失败:{}", JSON.toJSONString(orderEntity));
@@ -74,10 +74,9 @@ public class TradeService {
     /**
      * 限价下单入库
      * @param orderEntity
-     * @param account
      */
-    private void saveBuyLimitOrder(OrderEntity orderEntity,Account account,Long orderId) {
-        BuyLimit buyLimit = BuyLimit.builder().apiKey(orderEntity.getApiKey()).secretKey(orderEntity.getSecretKey()).accountId(account.getId()).
+    private void saveBuyLimitOrder(OrderEntity orderEntity,Long orderId) {
+        BuyLimit buyLimit = BuyLimit.builder().apiKey(orderEntity.getApiKey()).secretKey(orderEntity.getSecretKey()).accountId(orderEntity.getAccountId()).
                 price(orderEntity.getPrice()).amount(orderEntity.getAmount()).symbol(orderEntity.getSymbol()).
                 sellPrice(orderEntity.getSellPrice()).createTime(System.currentTimeMillis()).
                 cancelTime(orderEntity.getCancelTime()).status(0).orderId(orderId).build();
