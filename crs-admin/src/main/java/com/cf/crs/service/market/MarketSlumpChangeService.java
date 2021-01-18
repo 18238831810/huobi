@@ -1,6 +1,7 @@
 package com.cf.crs.service.market;
 
 import com.cf.crs.common.utils.DateUtils;
+import com.cf.crs.entity.BuyLimit;
 import com.cf.crs.entity.OrderEntity;
 import com.cf.crs.huobi.client.req.market.CandlestickRequest;
 import com.cf.crs.huobi.constant.HuobiOptions;
@@ -9,14 +10,20 @@ import com.cf.crs.huobi.huobi.HuobiMarketService;
 import com.cf.crs.huobi.model.market.Candlestick;
 import com.cf.crs.service.TradeService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.Md5Crypt;
+import org.apache.tomcat.util.security.MD5Encoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.DigestUtils;
+import sun.security.provider.MD5;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 根据行情数据算出下跌指点百分点后的挂单
@@ -28,18 +35,23 @@ public class MarketSlumpChangeService {
     @Autowired
     TradeService tradeService;
 
-    private void saveSlumpChangeOrders( )
+    public void saveSlumpChangeOrders(SlumpRequest slumpRequest )
     {
-        SlumpRequest  slumpRequest = SlumpRequest.builder().candlestickIntervalEnum(CandlestickIntervalEnum.MIN60)
-                .coinsEnum(CoinsEnum.BTC_USDT).totalUsdt(500).build();
-        List<OrderEntity> orderEntities= this.saveSlumpChangeOrders(slumpRequest);
+        List<OrderEntity> orderEntities= this.getSlumpChangeOrders(slumpRequest);
+        if(CollectionUtils.isEmpty(orderEntities))
+        {
+            log.warn("toString->{}",slumpRequest.toString());
+            return;
+        }
         for (OrderEntity orderEntity:orderEntities) {
-            System.out.println(orderEntity);
+            if(tradeService.getByUnitKey(orderEntity.getUnikey())!=null) continue;
             tradeService.createOrder(orderEntity);
         }
+
     }
 
-    public List<OrderEntity> saveSlumpChangeOrders(SlumpRequest slumpRequest) {
+
+    public List<OrderEntity> getSlumpChangeOrders(SlumpRequest slumpRequest) {
         HuobiMarketService huobiMarketService = new HuobiMarketService(new HuobiOptions());
         CandlestickRequest candlestickRequest= CandlestickRequest.builder()
                 .symbol(slumpRequest.getCoinsEnum().getSymbol())
@@ -85,7 +97,7 @@ public class MarketSlumpChangeService {
         orderEntity.setInitialPrice(candlestick.getLow().toString());
         //下单的价格
         BigDecimal buyPrice = candlestick.getLow().multiply(BigDecimal.valueOf(100 - slumpPointEnum.getSlumpPoint())).divide(BigDecimal.valueOf(100), slumpRequest.getCoinsEnum().getPrizeScale(), BigDecimal.ROUND_DOWN);
-
+        orderEntity.setPrice(buyPrice.toString());
 
         //下单的数量,暂时没有算手续费,需要后期查询此单时实际成交的量
         BigDecimal bigDecimal = BigDecimal.valueOf(slumpRequest.getTotalUsdt()).multiply(BigDecimal.valueOf(slumpPointEnum.getCapitalPoint())).divide(buyPrice, slumpRequest.getCoinsEnum().getAmountScale(), BigDecimal.ROUND_DOWN);
@@ -100,6 +112,9 @@ public class MarketSlumpChangeService {
         //撤单时间为下下单时间的下一个小时，也是行情的下下个小时
         orderEntity.setCancelTime(candlestick.getId() + 2 * 60 * 60);
 
+        //此key是按时间+symbol+暴跌百分比 MD5
+        String oop=candlestick.getId()+":"+orderEntity.getSymbol()+":"+slumpPointEnum.getSlumpPoint();
+        orderEntity.setUnikey( DigestUtils.md5DigestAsHex(oop.getBytes()));
         return orderEntity;
     }
 }

@@ -37,12 +37,25 @@ public class ApplicationTest {
     @Test
     public void testSlump()
     {
+
         SlumpRequest  slumpRequest = SlumpRequest.builder().candlestickIntervalEnum(CandlestickIntervalEnum.MIN60)
-                .coinsEnum(CoinsEnum.BTC_USDT).totalUsdt(500).build();
-        List<OrderEntity> orderEntities= marketSlumpChangeService.saveSlumpChangeOrders(slumpRequest);
+                .coinsEnum(CoinsEnum.USDT_BTC).totalUsdt(500).build();
+        List<OrderEntity> orderEntities= marketSlumpChangeService.getSlumpChangeOrders(slumpRequest);
         for (OrderEntity orderEntity:orderEntities) {
             System.out.println(orderEntity);
         }
+    }
+
+    @Test
+    public void testSaveSlump()
+    {
+        double totalUsdt=500;
+        CoinsEnum[] coinsEnums= CoinsEnum.values();
+        for (CoinsEnum coinsEnum:coinsEnums) {
+
+        }
+        SlumpRequest slumpRequest = SlumpRequest.builder().candlestickIntervalEnum(CandlestickIntervalEnum.MIN60).coinsEnum(CoinsEnum.USDT_BTC).totalUsdt(totalUsdt).build();
+        marketSlumpChangeService.saveSlumpChangeOrders(slumpRequest);
     }
 
     /**

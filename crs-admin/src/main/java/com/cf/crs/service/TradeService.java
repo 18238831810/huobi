@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -50,11 +51,7 @@ public class TradeService {
      * @param orderEntity 此处限价下单，主要填 apiKey，secretKey，symbol，price，amount，sellPrice，cancelTime
      */
     public Long createOrder(OrderEntity orderEntity){
-        String apiKey = orderEntity.getApiKey();
-        String secretKey = orderEntity.getSecretKey();
-        TradeClient tradeClient = getTradeClient(apiKey, secretKey);
-        //Account account = accountService.getAccount(apiKey, secretKey);
-        //if (account == null) return null;
+        //TradeClient tradeClient = getTradeClient(orderEntity.getApiKey(), orderEntity.getSecretKey());
         try {
             //Long orderId = tradeClient.createOrder(CreateOrderRequest.spotBuyLimit(account.getId(),orderEntity.getSymbol(), new BigDecimal(orderEntity.getPrice()), new BigDecimal(orderEntity.getAmount())));
             //限价下单，存入数据库
@@ -71,6 +68,7 @@ public class TradeService {
         }
     }
 
+
     /**
      * 限价下单入库
      * @param orderEntity
@@ -79,10 +77,19 @@ public class TradeService {
         BuyLimit buyLimit = BuyLimit.builder().apiKey(orderEntity.getApiKey()).secretKey(orderEntity.getSecretKey()).accountId(orderEntity.getAccountId()).
                 price(orderEntity.getPrice()).amount(orderEntity.getAmount()).symbol(orderEntity.getSymbol()).
                 sellPrice(orderEntity.getSellPrice()).createTime(System.currentTimeMillis()).
-                cancelTime(orderEntity.getCancelTime()).status(0).orderId(orderId).build();
+                cancelTime(orderEntity.getCancelTime()).status(0).orderId(orderId).unikey(orderEntity.getUnikey()).build();
         buyLimitMapper.insert(buyLimit);
     }
 
+    public List<BuyLimit> getByUnitKey(Collection<String> unikeys)
+    {
+        return buyLimitMapper.selectBatchIds(unikeys);
+    }
+
+    public BuyLimit getByUnitKey(String unikey)
+    {
+        return buyLimitMapper.selectOne(new QueryWrapper<BuyLimit>().eq("unikey",unikey).last(" limit 1"));
+    }
 
     /**
      * 定时处理挂单数据

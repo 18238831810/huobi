@@ -1,10 +1,7 @@
 package com.cf.crs.service.market;
 
 import com.cf.crs.huobi.constant.enums.CandlestickIntervalEnum;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 /**
  * 暴跌下单参数实体
@@ -13,6 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class SlumpRequest {
 
     /**

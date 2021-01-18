@@ -82,4 +82,7 @@ public class OrderEntity {
 
     private Long accountId;
 
+    //此key是按时间+symbol+暴跌百分比 MD5
+    private String unikey;
+
 }

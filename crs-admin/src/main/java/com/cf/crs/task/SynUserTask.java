@@ -38,11 +38,15 @@ public class SynUserTask implements ITask{
 
     private void saveSlumpChangeOrders(String param)
     {
+
         if("slump_orders".equalsIgnoreCase(param))
         {
-            SlumpRequest slumpRequest = SlumpRequest.builder().candlestickIntervalEnum(CandlestickIntervalEnum.MIN60)
-                    .coinsEnum(CoinsEnum.BTC_USDT).totalUsdt(500).build();
-            marketSlumpChangeService.saveSlumpChangeOrders(slumpRequest);
+            double totalUsdt=500;
+            CoinsEnum[] coinsEnums= CoinsEnum.values();
+            for (CoinsEnum coinsEnum:coinsEnums) {
+                SlumpRequest slumpRequest = SlumpRequest.builder().candlestickIntervalEnum(CandlestickIntervalEnum.MIN60).coinsEnum(coinsEnum).totalUsdt(totalUsdt).build();
+                marketSlumpChangeService.saveSlumpChangeOrders(slumpRequest);
+            }
         }
     }
 

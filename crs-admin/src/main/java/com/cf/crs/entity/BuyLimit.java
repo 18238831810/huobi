@@ -82,4 +82,6 @@ public class BuyLimit {
      */
     private int status;
 
+    //此key是按时间+symbol+暴跌百分比 MD5
+    private String unikey;
 }
