@@ -3,6 +3,7 @@ package com.cf.crs.service;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.cf.crs.entity.BuyLimit;
 import com.cf.crs.entity.OrderEntity;
 import com.cf.crs.entity.SellLimit;
@@ -13,6 +14,7 @@ import com.cf.crs.huobi.model.trade.Order;
 import com.cf.crs.mapper.BuyLimitMapper;
 import com.cf.crs.mapper.SellLimitMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -129,6 +131,10 @@ public class TradeService {
      * @return
      */
     public void workOrder(BuyLimit buyLimit){
+        if (buyLimit.getOrderId() == 0) {
+            log.info("订单数据异常:{}",JSON.toJSONString(buyLimit));
+            return;
+        }
         TradeClient tradeClient = getTradeClient(buyLimit.getApiKey(),buyLimit.getSecretKey());
         try {
             Order order = tradeClient.getOrder(buyLimit.getOrderId());
@@ -146,18 +152,12 @@ public class TradeService {
                 //部分成交，更新更新订单库，并根据成交量选择挂单卖出
                 if (order.getAmount().multiply(new BigDecimal(3)).compareTo(new BigDecimal(buyLimit.getAmount())) >= 0){
                     //部分成交
+                    sellPartialOrder(tradeClient, buyLimit,order,1);
                 }
             }else if("filled".equals(state)){
-                //已成交
-                if(buyLimit.getStatus() == 0){
-                    //一步到位，直接全部成交了。全部卖出并更新订单库
-                    sellAllOrder(tradeClient, buyLimit, order);
-                }else if(buyLimit.getStatus() == 1){
-                   //部分成交
-
-                }
+                //全部成交
+                sellPartialOrder(tradeClient, buyLimit,order,2);
             }
-
         } catch (Exception e) {
             log.info("撤单失败:{}，{}",buyLimit.getOrderId(),JSON.toJSONString(buyLimit));
             log.error(e.getMessage(),e);
@@ -170,10 +170,26 @@ public class TradeService {
      * @param tradeClient
      * @param buyLimit
      */
-    @Transactional(rollbackFor = Exception.class)
-    public Long sellPartialOrder(TradeClient tradeClient,BuyLimit buyLimit,Order order){
+    public Long sellPartialOrder(TradeClient tradeClient,BuyLimit buyLimit,Order order,Integer status){
        //查询已经卖出的记录
-        //sellLimitMapper.selectList()
+        List<SellLimit> sellList = sellLimitMapper.selectList(new QueryWrapper<SellLimit>().eq("buy_order_id", buyLimit.getOrderId()));
+        //获取已卖出的数据量
+        if (CollectionUtils.isEmpty(sellList)) {
+            //不存在卖出订单
+            buyLimit.setAmount(order.getAmount().toString());
+            sellAllOrder(tradeClient, buyLimit, order,status);
+            return 1L;
+        }
+        //存在卖出订单,计算卖出订单总量,计算现在可以卖出的数据
+        BigDecimal sellAmout = new BigDecimal(0);
+        for (SellLimit sellLimit : sellList) {
+            sellAmout.add(new BigDecimal(sellLimit.getAmount()));
+        }
+        if (order.getAmount().compareTo(sellAmout) <= 0) return 1L;
+
+        //计算卖出数量，卖出下单
+        buyLimit.setAmount(order.getAmount().subtract(sellAmout).toString());
+        sellAllOrder(tradeClient, buyLimit, order,status);
         return 1L;
     }
 
@@ -183,17 +199,16 @@ public class TradeService {
      * @param buyLimit
      */
     @Transactional(rollbackFor = Exception.class)
-    public Long sellAllOrder(TradeClient tradeClient,BuyLimit buyLimit,Order order){
-        buyLimit.setStatus(3);
-        buyLimit.setOrderDetail(JSON.toJSONString(order));
-        buyLimitMapper.updateById(buyLimit);
-        Long orderId = tradeClient.createOrder(CreateOrderRequest.spotSellLimit(buyLimit.getAccountId(),buyLimit.getSymbol(), new BigDecimal(buyLimit.getPrice()), new BigDecimal(buyLimit.getAmount())));
+    public Long sellAllOrder(TradeClient tradeClient,BuyLimit buyLimit,Order order,Integer status){
+        //更新订单数据
+        buyLimitMapper.update(null,new UpdateWrapper<BuyLimit>().set("status",status).set("order_detail",JSON.toJSONString(order)).eq("id",buyLimit.getId()));
+        Long orderId = tradeClient.createOrder(CreateOrderRequest.spotSellLimit(buyLimit.getAccountId(),buyLimit.getSymbol(), new BigDecimal(buyLimit.getSellPrice()), new BigDecimal(buyLimit.getAmount())));
         //卖出下单，存入数据库
         log.info("sell suc:{},{}",buyLimit.getAccountId(), JSON.toJSONString(buyLimit));
         //保存卖单数据入库
         try {
             SellLimit sellLimit = SellLimit.builder().apiKey(buyLimit.getApiKey()).secretKey(buyLimit.getSecretKey()).accountId(buyLimit.getAccountId()).
-                    price(buyLimit.getPrice()).amount(buyLimit.getAmount()).symbol(buyLimit.getSymbol()).createTime(System.currentTimeMillis()).
+                    price(buyLimit.getSellPrice()).amount(buyLimit.getAmount()).symbol(buyLimit.getSymbol()).createTime(System.currentTimeMillis()).
                     status(0).orderId(orderId).buyOrderId(buyLimit.getOrderId()).build();
             sellLimitMapper.insert(sellLimit);
         } catch (Exception e) {
@@ -201,9 +216,6 @@ public class TradeService {
         }
         return 1L;
     }
-
-
-
 
 
     /**
