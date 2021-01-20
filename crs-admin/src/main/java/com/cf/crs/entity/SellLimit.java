@@ -15,20 +15,19 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("buy_limit")
-public class BuyLimit {
-    /*
-    `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
-    `api_key` varchar(200) DEFAULT NULL COMMENT 'apiKey',
-    `secret_key` varchar(200) DEFAULT NULL COMMENT 'secretKey',
-    `account_id` bigint(13) DEFAULT NULL COMMENT '用户id',
-    `order_id` bigint(20) DEFAULT NULL COMMENT '订单单号',
-    `symbol` varchar(100) DEFAULT NULL COMMENT '交易对,即btcusdt, ethbtc...',
-    `price` varchar(100) DEFAULT NULL  COMMENT '订单价格',
-    `amount` varchar(100) DEFAULT NULL COMMENT '订单交易量',
-    `sell_price` varchar(100) DEFAULT NULL COMMENT '自定义卖出价格',
-    `cancel_time` bigint(13) DEFAULT NULL COMMENT '撤单时间',
-    `create_time` bigint(20) DEFAULT NULL COMMENT '下单时间',*/
+@TableName("sell_limit")
+public class SellLimit {
+    /*`id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+      `api_key` varchar(200) DEFAULT NULL COMMENT 'apiKey',
+      `secret_key` varchar(200) DEFAULT NULL COMMENT 'secretKey',
+      `account_id` bigint(13) DEFAULT NULL COMMENT '用户id',
+      `symbol` varchar(100) DEFAULT NULL COMMENT '交易对,即btcusdt, ethbtc...',
+      `price` varchar(100) DEFAULT NULL COMMENT '订单价格',
+      `amount` varchar(100) DEFAULT NULL COMMENT '订单交易量',
+      `order_id` bigint(20) DEFAULT NULL COMMENT '订单单号',
+      `buy_order_id` bigint(20) DEFAULT NULL COMMENT '限价买入下单订单单号',
+      `create_time` bigint(20) DEFAULT NULL COMMENT '下单时间',
+      `status` int(7) DEFAULT '0' COMMENT '订单状态（0：未成交，1：部分成交，2：已成交，3:已撤单）',*/
 
     private Long id;
 
@@ -65,12 +64,7 @@ public class BuyLimit {
     /**
      * 卖出价格
      */
-    private String sellPrice;
-
-    /**
-     * 撤单时间
-     */
-    private Long cancelTime;
+    private Long buyOrderId;
 
     /**
      * 下单时间
@@ -82,8 +76,6 @@ public class BuyLimit {
      */
     private int status;
 
-    //此key是按时间+symbol+暴跌百分比 MD5
-    private String unikey;
 
     /**
      * 订单详情
