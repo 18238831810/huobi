@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * 考评计划任务
+ * 处理订单数据
  * @author frank
  * 2019/10/16
  **/

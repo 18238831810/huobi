@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 
 
 /**
- * 下单
+ * 卖单数据
  *
  */
 @Data
