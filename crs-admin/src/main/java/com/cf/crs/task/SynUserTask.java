@@ -38,7 +38,7 @@ public class SynUserTask implements ITask{
 
     private void saveSlumpChangeOrders(String param)
     {
-
+        //根据行情下挂单
         if("slump_orders".equalsIgnoreCase(param))
         {
             double totalUsdt=500;
@@ -48,6 +48,12 @@ public class SynUserTask implements ITask{
                 marketSlumpChangeService.saveSlumpChangeOrders(slumpRequest);
             }
         }
+        //查询库中的订单是否已经下单成功
+        else if("pong_query".equalsIgnoreCase(param))
+        {
+            marketSlumpChangeService.saveSucOrders();
+        }
     }
+
 
 }

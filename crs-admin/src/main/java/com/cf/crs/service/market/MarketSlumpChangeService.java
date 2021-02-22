@@ -5,25 +5,19 @@ import com.cf.crs.entity.BuyLimit;
 import com.cf.crs.entity.OrderEntity;
 import com.cf.crs.huobi.client.req.market.CandlestickRequest;
 import com.cf.crs.huobi.constant.HuobiOptions;
-import com.cf.crs.huobi.constant.enums.CandlestickIntervalEnum;
 import com.cf.crs.huobi.huobi.HuobiMarketService;
 import com.cf.crs.huobi.model.market.Candlestick;
 import com.cf.crs.service.TradeService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.Md5Crypt;
-import org.apache.tomcat.util.security.MD5Encoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
-import sun.security.provider.MD5;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * 根据行情数据算出下跌指点百分点后的挂单
@@ -116,5 +110,29 @@ public class MarketSlumpChangeService {
         String oop=candlestick.getId()+":"+orderEntity.getSymbol()+":"+slumpPointEnum.getSlumpPoint();
         orderEntity.setUnikey( DigestUtils.md5DigestAsHex(oop.getBytes()));
         return orderEntity;
+    }
+
+    public void saveSucOrders()
+    {
+        long now =System.currentTimeMillis();
+        List<BuyLimit>  buyLimits=  tradeService.getNotExpireAndNotSucBuyLimit();
+        if(CollectionUtils.isEmpty(buyLimits)) {
+            return;
+        }
+
+        for (BuyLimit buyList: buyLimits) {
+            //如果已经达到撤销的最大时长，就将订单撤销
+            if (buyList.getCancelDuration() + buyList.getCreateTime() < now)
+            {
+                //处理此时有部分成功的
+               /* tradeService.cancelOrder(buyList);
+                buyList.setStatus(1);
+                tradeService.updateStatus(buyList);*/
+            }
+            else
+            {
+
+            }
+        }
     }
 }

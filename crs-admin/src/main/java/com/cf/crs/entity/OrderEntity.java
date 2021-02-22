@@ -82,6 +82,11 @@ public class OrderEntity {
 
     private Long accountId;
 
+    /**
+     * 挂单挂多久撤销(单位分钟)
+     */
+    private Long howLongToCancel;
+
     //此key是按时间+symbol+暴跌百分比 MD5
     private String unikey;
 

@@ -78,10 +78,17 @@ public class BuyLimit {
     private Long createTime;
 
     /**
-     * 订单状态（0：未成交，1：已撤单，2：已成交)
+     * 订单状态（0：未成交，1：已撤单，2：订单完全成功，3.订单部分成功但未撤单，4订单部分成功但是已经撤单)
      */
     private int status;
 
+    /**
+     * 挂单挂多久撤销(单位分钟)
+     */
+    private Long cancelDuration;
+
     //此key是按时间+symbol+暴跌百分比 MD5
     private String unikey;
+
+
 }
