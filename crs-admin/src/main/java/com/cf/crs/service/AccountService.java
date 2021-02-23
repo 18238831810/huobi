@@ -64,6 +64,9 @@ public class AccountService   implements   AbstractHuobiPraramService{
         return accountClient.getAccountBalance(AccountBalanceRequest.builder().accountId(account.getId()).build());
     }
 
+    public AccountBalance getAccountBalance(){
+        return getAccountBalance(apiKey, secretKey);
+    }
 
 
 

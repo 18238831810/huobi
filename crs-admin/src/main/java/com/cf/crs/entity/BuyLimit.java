@@ -86,5 +86,18 @@ public class BuyLimit {
     //此key是按时间+symbol+暴跌百分比 MD5
     private String unikey;
 
+    private String orderDetail;
+
+    /**
+     *
+     * 订单的金额
+     */
+    private String total;
+
+    /**
+     * 基于哪一个K线行情下的单
+     */
+    private String marketId;
+
 
 }

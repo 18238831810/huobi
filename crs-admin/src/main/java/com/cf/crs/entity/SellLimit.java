@@ -58,4 +58,11 @@ public class SellLimit {
      */
     private int status;
 
+    private String total;
+    /**
+     * 基于哪一个K线行情下的单
+     */
+    private String marketId;
+
+
 }

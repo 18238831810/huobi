@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -26,8 +27,7 @@ import java.util.List;
  */
 @Slf4j
 @Service
-public class TradeService implements   AbstractHuobiPraramService{
-
+public class TradeService implements AbstractHuobiPraramService {
 
 
     @Autowired
@@ -58,27 +58,19 @@ public class TradeService implements   AbstractHuobiPraramService{
     /**
      * 限价下单
      *
-     * @param orderEntity 此处限价下单，主要填 apiKey，secretKey，symbol，price，amount，sellPrice，cancelTime
+     * @param buyLimit 此处限价下单，主要填 apiKey，secretKey，symbol，price，amount，sellPrice，cancelTime
      */
-    public Long createOrder(OrderEntity orderEntity, Account account) {
+    public Long createOrder(BuyLimit buyLimit) {
         try {
-            Long orderId = getTradeClient().createOrder(CreateOrderRequest.spotBuyLimit(account.getId(), orderEntity.getSymbol(), new BigDecimal(orderEntity.getPrice()), new BigDecimal(orderEntity.getAmount())));
-            //限价下单，存入数据库
-            log.info("限价下单成功:{},{}", orderEntity.getAccountId(), JSON.toJSONString(orderEntity));
-            //此处最好有短信提醒
-            //下单数据入库
-            saveBuyLimitOrder(orderEntity, orderId);
+            Long orderId = getTradeClient().createOrder(CreateOrderRequest.spotBuyLimit(buyLimit.getAccountId(), buyLimit.getSymbol(), new BigDecimal(buyLimit.getPrice()), new BigDecimal(buyLimit.getAmount())));
+            buyLimit.setOrderId(orderId);
+            buyLimitMapper.insert(buyLimit);
             return orderId;
         } catch (Exception e) {
-            log.info("限价下单失败:{}", JSON.toJSONString(orderEntity));
+            log.info("限价下单失败:{}", JSON.toJSONString(buyLimit));
             log.error(e.getMessage(), e);
             return null;
         }
-    }
-
-    public Long createOrder(OrderEntity orderEntity)
-    {
-        return createOrder( orderEntity, accountService.getAccount());
     }
 
     /**
@@ -89,13 +81,12 @@ public class TradeService implements   AbstractHuobiPraramService{
     public void createSellOrder(BuyLimit buyLimit, long now) {
         TradeClient tradeClient = getTradeClient();
         Order order = tradeClient.getOrder(buyLimit.getOrderId());
-
         //如果到时间还没有任何成交，直播取消
-        if (order.getFilledAmount().longValue() == 0 && (buyLimit.getCancelTime() < now)) {
-            cancalOrder(buyLimit,1);
+        if (order.getFilledAmount().compareTo(BigDecimal.ZERO) == 0 && (buyLimit.getCancelTime() < now)) {
+            cancelOrder(buyLimit, 1);
             return;
         }
-        if (order.getFilledAmount().longValue() > 0) {
+        if (order.getFilledAmount().compareTo(BigDecimal.ZERO) > 0) {
             createNotAllFilledOrder(tradeClient, buyLimit, order, now);
         }
     }
@@ -103,7 +94,7 @@ public class TradeService implements   AbstractHuobiPraramService{
     private void createNotAllFilledOrder(TradeClient tradeClient, BuyLimit buyLimit, Order order, long now) {
         BigDecimal total = createSellOrder(tradeClient, buyLimit);
         //如果下单了
-        if (total.longValue() > 0) {
+        if (total.compareTo(BigDecimal.ZERO) > 0) {
             //如果全成交
             if (order.getFilledAmount().compareTo(order.getAmount()) == 0) {
                 updateStauts(buyLimit.getId(), 2);
@@ -122,20 +113,19 @@ public class TradeService implements   AbstractHuobiPraramService{
                 return;
             }
         }
-        if(buyLimit.getCancelTime() < now)
-        {
-            cancalOrder(buyLimit,4);
+        if (buyLimit.getCancelTime() < now) {
+            cancelOrder(buyLimit, 4);
         }
 
     }
 
     private BigDecimal createSellOrder(TradeClient tradeClient, BuyLimit buyLimit) {
         BigDecimal total = getSellTotal(buyLimit);
-        if (total.longValue() > 0) {
+        if (total.compareTo(BigDecimal.ZERO) > 0) {
             Long orderId = tradeClient.createOrder(CreateOrderRequest.spotSellLimit(buyLimit.getAccountId(), buyLimit.getSymbol(), new BigDecimal(buyLimit.getSellPrice()), total));
             if (orderId != null) {
                 SellLimit sellLimit = SellLimit.builder().amount(buyLimit.getAmount()).buyId(buyLimit.getId()).ctime(System.currentTimeMillis()).price(buyLimit.getSellPrice())
-                        .status(0).orderId(orderId.toString()).build();
+                        .marketId(buyLimit.getMarketId()).total(buyLimit.getTotal()).accountId(buyLimit.getAccountId()).apiKey(buyLimit.getApiKey()).secretKey(buyLimit.getSecretKey()).status(0).orderId(orderId.toString()).build();
                 saveSellLimit(sellLimit);
             }
         }
@@ -157,26 +147,13 @@ public class TradeService implements   AbstractHuobiPraramService{
      * @return
      */
     private BigDecimal getSellTotal(BuyLimit buyLimit) {
-        List<SellLimit> list = sellLimitMapper.selectList(new QueryWrapper<SellLimit>().eq("buyId", buyLimit.getId()));
+        List<SellLimit> list = sellLimitMapper.selectList(new QueryWrapper<SellLimit>().eq("buy_id", buyLimit.getId()));
         BigDecimal total = new BigDecimal(0);
         if (!CollectionUtils.isEmpty(list))
             for (SellLimit sellLimit : list) {
                 total.add(new BigDecimal(sellLimit.getAmount()));
             }
         return new BigDecimal(buyLimit.getAmount()).subtract(total);
-    }
-
-    /**
-     * 限价下单入库
-     *
-     * @param orderEntity
-     */
-    private void saveBuyLimitOrder(OrderEntity orderEntity, Long orderId) {
-        BuyLimit buyLimit = BuyLimit.builder().apiKey(apiKey).secretKey(secretKey).accountId(orderEntity.getAccountId()).
-                price(orderEntity.getPrice()).amount(orderEntity.getAmount()).symbol(orderEntity.getSymbol()).
-                sellPrice(orderEntity.getSellPrice()).createTime(System.currentTimeMillis()).
-                cancelTime(orderEntity.getCancelTime()).status(0).orderId(orderId).unikey(orderEntity.getUnikey()).build();
-        buyLimitMapper.insert(buyLimit);
     }
 
 
@@ -198,9 +175,8 @@ public class TradeService implements   AbstractHuobiPraramService{
         return buyLimitMapper.selectList(new QueryWrapper<BuyLimit>().in("status", 0, 3, 4));
     }
 
-    public boolean cancalOrder(BuyLimit buyLimit,int status) {
-        TradeClient tradeClient = getTradeClient(buyLimit.getApiKey(), buyLimit.getSecretKey());
-        Long cancelId = tradeClient.cancelOrder(buyLimit.getOrderId());
+    public boolean cancelOrder(BuyLimit buyLimit, int status) {
+        Long cancelId = cancelOrder(buyLimit);
         if (cancelId != null && (cancelId.longValue() == buyLimit.getOrderId().longValue())) {
             updateStauts(buyLimit.getId(), status);
             return true;
@@ -209,9 +185,26 @@ public class TradeService implements   AbstractHuobiPraramService{
         return false;
     }
 
-    private void updateStauts(long id, int status) {
+    private Long cancelOrder(BuyLimit buyLimit) {
         try {
-            buyLimitMapper.update(null, new UpdateWrapper<BuyLimit>().set("status", status).eq("id", id));
+            TradeClient tradeClient = getTradeClient(buyLimit.getApiKey(), buyLimit.getSecretKey());
+            Long cancelId = tradeClient.cancelOrder(buyLimit.getOrderId());
+            return cancelId;
+        } catch (Exception e) {
+            log.error("【取消买单时出错】 id->{} error->{}", buyLimit.getId(), e.getMessage());
+            if (e.getMessage().indexOf("order-orderstate-error: Incorrect order state") >= 0)
+                updateStauts(buyLimit.getId(), 1, e.getMessage());
+        }
+        return null;
+    }
+
+    private void updateStauts(long id, int status) {
+        updateStauts(id, status, null);
+    }
+
+    private void updateStauts(long id, int status, String orderDetail) {
+        try {
+            buyLimitMapper.update(null, new UpdateWrapper<BuyLimit>().set("status", status).set("order_detail", orderDetail).eq("id", id));
         } catch (Exception e) {
             log.error("必须处理的【更新买单时出错】error->{} id->{} status->{}", id, status);
         }

@@ -4,6 +4,7 @@ package com.cf.crs;
 import com.alibaba.fastjson.JSON;
 import com.cf.crs.entity.BuyLimit;
 import com.cf.crs.entity.OrderEntity;
+import com.cf.crs.huobi.client.TradeClient;
 import com.cf.crs.huobi.constant.enums.CandlestickIntervalEnum;
 import com.cf.crs.huobi.model.account.Account;
 import com.cf.crs.huobi.model.account.AccountBalance;
@@ -40,8 +41,8 @@ public class ApplicationTest {
 
         SlumpRequest  slumpRequest = SlumpRequest.builder().candlestickIntervalEnum(CandlestickIntervalEnum.MIN60)
                 .coinsEnum(CoinsEnum.USDT_BTC).totalUsdt(500).build();
-        List<OrderEntity> orderEntities= marketSlumpChangeService.getSlumpChangeOrders(slumpRequest);
-        for (OrderEntity orderEntity:orderEntities) {
+        List<BuyLimit> orderEntities= marketSlumpChangeService.getSlumpChangeOrders(slumpRequest);
+        for (BuyLimit orderEntity:orderEntities) {
             System.out.println(orderEntity);
         }
     }
@@ -63,7 +64,7 @@ public class ApplicationTest {
      */
     @Test
     public void getAccount(){
-        Account account = accountService.getAccount("fa4e6356-67181a8e-dab4c45e6f-dc250", "a8f67e99-2d7ad560-fefabfd7-1ef78");
+        Account account = accountService.getAccount();
         System.out.println(JSON.toJSONString(account));
     }
 
@@ -72,13 +73,13 @@ public class ApplicationTest {
      */
     @Test
     public void getAccountBalance(){
-        AccountBalance accountBalance = accountService.getAccountBalance("fa4e6356-67181a8e-dab4c45e6f-dc25011", "a8f67e99-2d7ad560-fefabfd7-1ef78");
+        AccountBalance accountBalance = accountService.getAccountBalance();
         System.out.println(JSON.toJSONString(accountBalance));
     }
 
     @Test
     public void createOrder(){
-        OrderEntity orderEntity = OrderEntity.builder().symbol("btcusdt").price("30071.19").
+        BuyLimit orderEntity = BuyLimit.builder().symbol("btcusdt").price("30071.19").
                 amount("0.000239").sellPrice("38871.19").cancelTime(System.currentTimeMillis()).build();
         Long order = tradeService.createOrder(orderEntity);
         System.out.println(order);
@@ -88,8 +89,15 @@ public class ApplicationTest {
 
 
     @Test
-    public void getOrderDetail()
+    public void getSlumpRequest()
     {
-        ///v1/order/orders/getClientOrder
+        TradeClient tradeClient = tradeService.getTradeClient();
+        Long cancelId = tradeClient.cancelOrder(218610019128896L);
+    }
+
+    @Test
+    public void setSeller()
+    {
+        marketSlumpChangeService.saveSucOrders();
     }
 }

@@ -1,6 +1,6 @@
 package com.cf.crs;
 
-import com.cf.crs.entity.OrderEntity;
+import com.cf.crs.entity.BuyLimit;
 import com.cf.crs.huobi.model.account.Account;
 import com.cf.crs.huobi.model.trade.Order;
 import com.cf.crs.service.AccountService;
@@ -35,7 +35,7 @@ public class TraderTest {
 
     @Test
     public void createOrder(){
-        OrderEntity orderEntity = OrderEntity.builder().symbol("polsusdt").price("1.1936").
+        BuyLimit orderEntity = BuyLimit.builder().symbol("polsusdt").price("1.1936").
                 amount("6").sellPrice("8.19")
                 .accountId(getAccount().getId()).unikey(System.currentTimeMillis()+"").cancelTime(System.currentTimeMillis()+60*60000).build();
         Long order = tradeService.createOrder(orderEntity);
