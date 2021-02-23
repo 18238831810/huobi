@@ -78,17 +78,14 @@ public class ApplicationTest {
 
     @Test
     public void createOrder(){
-        OrderEntity orderEntity = OrderEntity.builder().apiKey("fa4e6356-67181a8e-dab4c45e6f-dc25011").secretKey("a8f67e99-2d7ad560-fefabfd7-1ef78").symbol("btcusdt").price("30071.19").
+        OrderEntity orderEntity = OrderEntity.builder().symbol("btcusdt").price("30071.19").
                 amount("0.000239").sellPrice("38871.19").cancelTime(System.currentTimeMillis()).build();
         Long order = tradeService.createOrder(orderEntity);
         System.out.println(order);
     }
 
 
-    @Test
-    public void getOrder(){
-        tradeService.synBuyLimit();
-    }
+
 
     @Test
     public void getOrderDetail()

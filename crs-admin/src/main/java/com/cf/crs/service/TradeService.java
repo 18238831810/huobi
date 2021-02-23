@@ -3,21 +3,22 @@ package com.cf.crs.service;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.cf.crs.entity.BuyLimit;
 import com.cf.crs.entity.OrderEntity;
+import com.cf.crs.entity.SellLimit;
 import com.cf.crs.huobi.client.TradeClient;
 import com.cf.crs.huobi.client.req.trade.CreateOrderRequest;
 import com.cf.crs.huobi.constant.HuobiOptions;
 import com.cf.crs.huobi.model.account.Account;
 import com.cf.crs.huobi.model.trade.Order;
 import com.cf.crs.mapper.BuyLimitMapper;
+import com.cf.crs.mapper.SellLimitMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-
 import java.math.BigDecimal;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -25,7 +26,7 @@ import java.util.List;
  */
 @Slf4j
 @Service
-public class TradeService {
+public class TradeService implements   AbstractHuobiPraramService{
 
 
 
@@ -35,136 +36,186 @@ public class TradeService {
     @Autowired
     BuyLimitMapper buyLimitMapper;
 
+    @Autowired
+    SellLimitMapper sellLimitMapper;
+
 
     /**
      * 获取下单TradeClient
+     *
      * @param apiKey
      * @param secretKey
      * @return
      */
-    public TradeClient getTradeClient(String apiKey,String secretKey){
+    public TradeClient getTradeClient(String apiKey, String secretKey) {
         return TradeClient.create(HuobiOptions.builder().apiKey(apiKey).secretKey(secretKey).build());
     }
 
+    public TradeClient getTradeClient() {
+        return getTradeClient(apiKey, secretKey);
+    }
 
     /**
      * 限价下单
+     *
      * @param orderEntity 此处限价下单，主要填 apiKey，secretKey，symbol，price，amount，sellPrice，cancelTime
      */
-    public Long createOrder(OrderEntity orderEntity){
-        TradeClient tradeClient = getTradeClient(orderEntity.getApiKey(), orderEntity.getSecretKey());
+    public Long createOrder(OrderEntity orderEntity, Account account) {
         try {
-            Long orderId = tradeClient.createOrder(CreateOrderRequest.spotBuyLimit(orderEntity.getAccountId(),orderEntity.getSymbol(), new BigDecimal(orderEntity.getPrice()), new BigDecimal(orderEntity.getAmount())));
+            Long orderId = getTradeClient().createOrder(CreateOrderRequest.spotBuyLimit(account.getId(), orderEntity.getSymbol(), new BigDecimal(orderEntity.getPrice()), new BigDecimal(orderEntity.getAmount())));
             //限价下单，存入数据库
-            log.info("限价下单成功:{},{}",orderEntity.getAccountId(), JSON.toJSONString(orderEntity));
+            log.info("限价下单成功:{},{}", orderEntity.getAccountId(), JSON.toJSONString(orderEntity));
             //此处最好有短信提醒
-
             //下单数据入库
-            saveBuyLimitOrder(orderEntity,orderId);
+            saveBuyLimitOrder(orderEntity, orderId);
             return orderId;
         } catch (Exception e) {
             log.info("限价下单失败:{}", JSON.toJSONString(orderEntity));
-            log.error(e.getMessage(),e);
+            log.error(e.getMessage(), e);
             return null;
         }
     }
 
+    public Long createOrder(OrderEntity orderEntity)
+    {
+        return createOrder( orderEntity, accountService.getAccount());
+    }
+
+    /**
+     * 生成出售订单
+     *
+     * @param buyLimit
+     */
+    public void createSellOrder(BuyLimit buyLimit, long now) {
+        TradeClient tradeClient = getTradeClient();
+        Order order = tradeClient.getOrder(buyLimit.getOrderId());
+
+        //如果到时间还没有任何成交，直播取消
+        if (order.getFilledAmount().longValue() == 0 && (buyLimit.getCancelTime() < now)) {
+            cancalOrder(buyLimit,1);
+            return;
+        }
+        if (order.getFilledAmount().longValue() > 0) {
+            createNotAllFilledOrder(tradeClient, buyLimit, order, now);
+        }
+    }
+
+    private void createNotAllFilledOrder(TradeClient tradeClient, BuyLimit buyLimit, Order order, long now) {
+        BigDecimal total = createSellOrder(tradeClient, buyLimit);
+        //如果下单了
+        if (total.longValue() > 0) {
+            //如果全成交
+            if (order.getFilledAmount().compareTo(order.getAmount()) == 0) {
+                updateStauts(buyLimit.getId(), 2);
+                return;
+            }
+
+            //如果有成交，但是时间未到了
+            if ((buyLimit.getCancelTime() > now)) {
+                updateStauts(buyLimit.getId(), 3);
+                return;
+            }
+
+            //如果有成交，但是时间已经到了
+            if ((buyLimit.getCancelTime() < now)) {
+                updateStauts(buyLimit.getId(), 4);
+                return;
+            }
+        }
+        if(buyLimit.getCancelTime() < now)
+        {
+            cancalOrder(buyLimit,4);
+        }
+
+    }
+
+    private BigDecimal createSellOrder(TradeClient tradeClient, BuyLimit buyLimit) {
+        BigDecimal total = getSellTotal(buyLimit);
+        if (total.longValue() > 0) {
+            Long orderId = tradeClient.createOrder(CreateOrderRequest.spotSellLimit(buyLimit.getAccountId(), buyLimit.getSymbol(), new BigDecimal(buyLimit.getSellPrice()), total));
+            if (orderId != null) {
+                SellLimit sellLimit = SellLimit.builder().amount(buyLimit.getAmount()).buyId(buyLimit.getId()).ctime(System.currentTimeMillis()).price(buyLimit.getSellPrice())
+                        .status(0).orderId(orderId.toString()).build();
+                saveSellLimit(sellLimit);
+            }
+        }
+        return total;
+    }
+
+    private void saveSellLimit(SellLimit sellLimit) {
+        try {
+            sellLimitMapper.insert(sellLimit);
+        } catch (Exception e) {
+            log.error("必须处理的【下卖单时出错】error->{} sellLimit->{}", e.getMessage(), sellLimit.toString());
+        }
+    }
+
+    /**
+     * 计算出要卖的量
+     *
+     * @param buyLimit
+     * @return
+     */
+    private BigDecimal getSellTotal(BuyLimit buyLimit) {
+        List<SellLimit> list = sellLimitMapper.selectList(new QueryWrapper<SellLimit>().eq("buyId", buyLimit.getId()));
+        BigDecimal total = new BigDecimal(0);
+        if (!CollectionUtils.isEmpty(list))
+            for (SellLimit sellLimit : list) {
+                total.add(new BigDecimal(sellLimit.getAmount()));
+            }
+        return new BigDecimal(buyLimit.getAmount()).subtract(total);
+    }
 
     /**
      * 限价下单入库
+     *
      * @param orderEntity
      */
-    private void saveBuyLimitOrder(OrderEntity orderEntity,Long orderId) {
-        BuyLimit buyLimit = BuyLimit.builder().apiKey(orderEntity.getApiKey()).secretKey(orderEntity.getSecretKey()).accountId(orderEntity.getAccountId()).
+    private void saveBuyLimitOrder(OrderEntity orderEntity, Long orderId) {
+        BuyLimit buyLimit = BuyLimit.builder().apiKey(apiKey).secretKey(secretKey).accountId(orderEntity.getAccountId()).
                 price(orderEntity.getPrice()).amount(orderEntity.getAmount()).symbol(orderEntity.getSymbol()).
-                sellPrice(orderEntity.getSellPrice()).createTime(System.currentTimeMillis())
-                .cancelDuration(orderEntity.getHowLongToCancel()).
+                sellPrice(orderEntity.getSellPrice()).createTime(System.currentTimeMillis()).
                 cancelTime(orderEntity.getCancelTime()).status(0).orderId(orderId).unikey(orderEntity.getUnikey()).build();
         buyLimitMapper.insert(buyLimit);
     }
 
-    public List<BuyLimit> getByUnitKey(Collection<String> unikeys)
-    {
-        return buyLimitMapper.selectBatchIds(unikeys);
-    }
 
-    public BuyLimit getByUnitKey(String unikey)
-    {
-        return buyLimitMapper.selectOne(new QueryWrapper<BuyLimit>().eq("unikey",unikey).last(" limit 1"));
+    public BuyLimit getByUnitKey(String unikey) {
+        return buyLimitMapper.selectOne(new QueryWrapper<BuyLimit>().eq("unikey", unikey).last(" limit 1"));
     }
-
-    /**
-     * 定时处理挂单数据
-     */
-    public void synBuyLimit(){
-        List<BuyLimit> list = getBuyLimitList();
-        for (BuyLimit buyLimit : list) {
-            workOrder(buyLimit);
-        }
-    }
-
 
     /**
      * 获取等待中的订单
+     *
      * @return
      */
-    public List<BuyLimit> getBuyLimitList(){
+    public List<BuyLimit> getBuyLimitList() {
         return buyLimitMapper.selectList(new QueryWrapper<BuyLimit>().eq("status", 0));
     }
 
-    /**
-     * 查询订单状态并处理订单
-     * @param buyLimit
-     * @return
-     */
-    public void workOrder(BuyLimit buyLimit){
-        TradeClient tradeClient = getTradeClient(buyLimit.getApiKey(),buyLimit.getSecretKey());
-        try {
-            Order order = tradeClient.getOrder(buyLimit.getOrderId());
-            //限价下单，存入数据库
-            log.info("查询订单:{},{}",buyLimit.getOrderId(),JSON.toJSONString(order));
-            //如果点单状态改变，则走后续步骤0.正常挂单  1.订单撤单，则改变订单状态，2.订单完全成功 3.订单部分成功
 
+    public List<BuyLimit> getExpireAndNotSucBuyLimit() {
+        return buyLimitMapper.selectList(new QueryWrapper<BuyLimit>().in("status", 0, 3, 4));
+    }
 
-            //更改订单状态
-            //buyLimit.setStatus(1);
-            //buyLimitMapper.updateById(buyLimit);
-        } catch (Exception e) {
-            log.info("撤单失败:{}，{}",buyLimit.getOrderId(),JSON.toJSONString(buyLimit));
-            log.error(e.getMessage(),e);
+    public boolean cancalOrder(BuyLimit buyLimit,int status) {
+        TradeClient tradeClient = getTradeClient(buyLimit.getApiKey(), buyLimit.getSecretKey());
+        Long cancelId = tradeClient.cancelOrder(buyLimit.getOrderId());
+        if (cancelId != null && (cancelId.longValue() == buyLimit.getOrderId().longValue())) {
+            updateStauts(buyLimit.getId(), status);
+            return true;
         }
+        log.info("cancalOrder->(cancelId->{} id->{})", cancelId, buyLimit.getId());
+        return false;
     }
 
-
-    public List<BuyLimit> getNotExpireAndNotSucBuyLimit()
-    {
-        return  buyLimitMapper.selectList(new QueryWrapper<BuyLimit>().in("status",3,4));
-    }
-
-
-    /**
-     * 撤单
-     * @param buyLimit
-     * @return
-     */
-    public void cancelOrder(BuyLimit buyLimit){
-        TradeClient tradeClient = getTradeClient(buyLimit.getApiKey(),buyLimit.getSecretKey());
+    private void updateStauts(long id, int status) {
         try {
-            tradeClient.cancelOrder(buyLimit.getOrderId());
-            //限价下单，存入数据库
-            log.info("撤单成功:{},{}",buyLimit.getOrderId(),JSON.toJSONString(buyLimit));
-            //更改订单状态
-            buyLimit.setStatus(1);
-            buyLimitMapper.updateById(buyLimit);
+            buyLimitMapper.update(null, new UpdateWrapper<BuyLimit>().set("status", status).eq("id", id));
         } catch (Exception e) {
-            log.info("撤单失败:{}，{}",buyLimit.getOrderId(),JSON.toJSONString(buyLimit));
-            log.error(e.getMessage(),e);
+            log.error("必须处理的【更新买单时出错】error->{} id->{} status->{}", id, status);
         }
-    }
 
-    public void updateStatus(BuyLimit buyLimit)
-    {
-        buyLimitMapper.updateById(buyLimit);
     }
 
 }

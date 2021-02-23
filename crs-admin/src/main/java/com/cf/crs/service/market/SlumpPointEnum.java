@@ -11,7 +11,7 @@ public enum SlumpPointEnum {
     STEP_TWO_POINT(5, 0.2,6.5),
     STEP_THREE_POINT(7, 0.3,7.5),
     STEP_FOUR_POINT(10, 0.4,8.5);
-    //    STEP_FIVE_POINT(20,7)
+
 
     /**
      * 暴跌点数（单位百分之几）

@@ -16,9 +16,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class OrderEntity {
 
-    private String apiKey;
+  /*  private String apiKey;
 
-    private String secretKey;
+    private String secretKey;*/
 
     //account-id	string	true	NA	账户 ID，取值参考 GET /v1/account/accounts。现货交易使用 ‘spot’ 账户的 account-id；逐仓杠杆交易，请使用 ‘margin’ 账户的 account-id；全仓杠杆交易，请使用 ‘super-margin’ 账户的 account-id
     //symbol	string	true	NA	交易对,即btcusdt, ethbtc...（取值参考GET /v1/common/symbols）
@@ -82,10 +82,6 @@ public class OrderEntity {
 
     private Long accountId;
 
-    /**
-     * 挂单挂多久撤销(单位分钟)
-     */
-    private Long howLongToCancel;
 
     //此key是按时间+symbol+暴跌百分比 MD5
     private String unikey;

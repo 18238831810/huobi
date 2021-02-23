@@ -7,12 +7,13 @@ import lombok.Setter;
  * 币参数配置
  */
 public enum CoinsEnum {
-    USDT_BTC("btcusdt", 6, 1),
-    USDT_ETH("ethusdt", 6, 1),
-    USDT_DOT("ethusdt", 4, 2),
-    USDT_LINK("ethusdt", 2, 2),
-    ETH_LTC("ethusdt", 4, 2),
-    ETH_BCH("ethusdt", 4, 2);
+    USDT_BTC("btcusdt", 6, 1)
+    // USDT_BCH("bchusdt", 4, 2),
+   // USDT_DOT("dotusdt", 4, 2),
+   // USDT_LINK("linkusdt", 2, 2),
+   // USDT_LTC("ltcusdt", 4, 2),
+   // USDT_ETH("ethusdt", 6, 1)
+   ;
 
     /**
      * 代币

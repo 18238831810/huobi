@@ -6,14 +6,15 @@ import com.cf.crs.entity.OrderEntity;
 import com.cf.crs.huobi.client.req.market.CandlestickRequest;
 import com.cf.crs.huobi.constant.HuobiOptions;
 import com.cf.crs.huobi.huobi.HuobiMarketService;
+import com.cf.crs.huobi.model.account.Account;
 import com.cf.crs.huobi.model.market.Candlestick;
+import com.cf.crs.service.AccountService;
 import com.cf.crs.service.TradeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
@@ -29,6 +30,9 @@ public class MarketSlumpChangeService {
     @Autowired
     TradeService tradeService;
 
+    @Autowired
+    AccountService accountService;
+
     public void saveSlumpChangeOrders(SlumpRequest slumpRequest )
     {
         List<OrderEntity> orderEntities= this.getSlumpChangeOrders(slumpRequest);
@@ -37,9 +41,12 @@ public class MarketSlumpChangeService {
             log.warn("toString->{}",slumpRequest.toString());
             return;
         }
+
+        Account account= accountService.getAccount();
+
         for (OrderEntity orderEntity:orderEntities) {
             if(tradeService.getByUnitKey(orderEntity.getUnikey())!=null) continue;
-            tradeService.createOrder(orderEntity);
+            tradeService.createOrder(orderEntity,account);
         }
 
     }
@@ -104,7 +111,7 @@ public class MarketSlumpChangeService {
         orderEntity.setSellPrice(sellPrice.toString());
 
         //撤单时间为下下单时间的下一个小时，也是行情的下下个小时
-        orderEntity.setCancelTime(candlestick.getId() + 2 * 60 * 60);
+        orderEntity.setCancelTime(candlestick.getId()+ 1 * 60 * 60*1000);
 
         //此key是按时间+symbol+暴跌百分比 MD5
         String oop=candlestick.getId()+":"+orderEntity.getSymbol()+":"+slumpPointEnum.getSlumpPoint();
@@ -115,24 +122,20 @@ public class MarketSlumpChangeService {
     public void saveSucOrders()
     {
         long now =System.currentTimeMillis();
-        List<BuyLimit>  buyLimits=  tradeService.getNotExpireAndNotSucBuyLimit();
+        List<BuyLimit>  buyLimits=  tradeService.getExpireAndNotSucBuyLimit();
         if(CollectionUtils.isEmpty(buyLimits)) {
             return;
         }
 
-        for (BuyLimit buyList: buyLimits) {
-            //如果已经达到撤销的最大时长，就将订单撤销
-            if (buyList.getCancelDuration() + buyList.getCreateTime() < now)
-            {
-                //处理此时有部分成功的
-               /* tradeService.cancelOrder(buyList);
-                buyList.setStatus(1);
-                tradeService.updateStatus(buyList);*/
-            }
-            else
-            {
-
-            }
+        for (BuyLimit buyLimit: buyLimits) {
+            tradeService.createSellOrder(buyLimit,now);
         }
+    }
+
+    /**
+     * 处理卖单成交情况
+     */
+    public void synSelled() {
+       // tradeService.updatSelled();
     }
 }

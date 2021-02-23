@@ -82,10 +82,6 @@ public class BuyLimit {
      */
     private int status;
 
-    /**
-     * 挂单挂多久撤销(单位分钟)
-     */
-    private Long cancelDuration;
 
     //此key是按时间+symbol+暴跌百分比 MD5
     private String unikey;

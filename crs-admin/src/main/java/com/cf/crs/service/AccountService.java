@@ -18,7 +18,7 @@ import java.util.List;
  */
 @Slf4j
 @Service
-public class AccountService {
+public class AccountService   implements   AbstractHuobiPraramService{
 
 
     /**
@@ -29,6 +29,9 @@ public class AccountService {
      */
     public AccountClient getAccountClient(String apiKey,String secretKey){
         return AccountClient.create(HuobiOptions.builder().apiKey(apiKey).secretKey(secretKey).build());
+    }
+    public AccountClient getAccountClient(){
+        return getAccountClient(apiKey,secretKey);
     }
 
     /**
@@ -43,6 +46,10 @@ public class AccountService {
         if (CollectionUtils.isEmpty(list)) return null;
         log.info("accountList:{}", JSON.toJSONString(list));
         return list.get(0);
+    }
+
+    public Account getAccount(){
+        return getAccount(apiKey,secretKey);
     }
 
     /**

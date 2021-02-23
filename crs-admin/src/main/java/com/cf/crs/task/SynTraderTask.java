@@ -16,8 +16,8 @@ import org.springframework.stereotype.Component;
  * 2019/10/16
  **/
 @Slf4j
-@Component("synUserTask")
-public class SynUserTask implements ITask{
+@Component("synTraderTask")
+public class SynTraderTask implements ITask{
 
     @Autowired
     MarketSlumpChangeService marketSlumpChangeService;
@@ -49,9 +49,13 @@ public class SynUserTask implements ITask{
             }
         }
         //查询库中的订单是否已经下单成功
-        else if("pong_query".equalsIgnoreCase(param))
+        else if("slump_seller".equalsIgnoreCase(param))
         {
             marketSlumpChangeService.saveSucOrders();
+        }
+        else if("slump_sell_suc".equalsIgnoreCase(param))
+        {
+            marketSlumpChangeService.synSelled();
         }
     }
 
