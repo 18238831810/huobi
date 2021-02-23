@@ -22,7 +22,7 @@ public class SynTradeTask implements ITask{
     public void run(String params) {
         try {
             log.info("处理订单数据计划开始执行");
-            tradeService.synBuyLimit();
+           // tradeService.synBuyLimit();
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
