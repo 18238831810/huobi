@@ -64,5 +64,12 @@ public class SellLimit {
      */
     private String marketId;
 
+    /**
+     * 已卖出量
+     */
+    private String selled_amount;
+
+    private long utime=0;
+
 
 }

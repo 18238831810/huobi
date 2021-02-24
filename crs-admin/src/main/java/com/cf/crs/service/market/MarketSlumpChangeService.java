@@ -1,6 +1,5 @@
 package com.cf.crs.service.market;
 
-import com.cf.crs.common.utils.DateUtils;
 import com.cf.crs.entity.BuyLimit;
 import com.cf.crs.huobi.client.req.market.CandlestickRequest;
 import com.cf.crs.huobi.constant.HuobiOptions;
@@ -14,9 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -57,23 +56,23 @@ public class MarketSlumpChangeService {
         CandlestickRequest candlestickRequest= CandlestickRequest.builder()
                 .symbol(slumpRequest.getCoinsEnum().getSymbol())
                 .interval(slumpRequest.getCandlestickIntervalEnum())
-                .size(1).build();
+                .size(2).build();
         List<Candlestick> candlestickList = huobiMarketService.getCandlestick(candlestickRequest);
-        if (CollectionUtils.isEmpty(candlestickList))
+        if (CollectionUtils.isEmpty(candlestickList) && candlestickList.size()!=2)
         {
             log.warn("symbol->{} Interval->{} 's Candlestick is null",slumpRequest.getCoinsEnum().getSymbol(),slumpRequest.getCandlestickIntervalEnum().getCode());
             return null;
         }
-        return getSlumpChangeFromCandlestick(candlestickList.get(0),  slumpRequest);
+        return getSlumpChangeFromCandlestick(candlestickList.get(1),  slumpRequest);
     }
 
     private List<BuyLimit> getSlumpChangeFromCandlestick(Candlestick candlestick, SlumpRequest slumpRequest) {
 
-        Long dayHour = DateUtils.stringToDate(DateUtils.format(new Date(), "yyyyMMddHH"), "yyyyMMddHH").getTime();
+        //Long dayHour = DateUtils.stringToDate(DateUtils.format(new Date(), "yyyyMMddHH"), "yyyyMMddHH").getTime();
         //如何获取的行情不对的话就不下单
-        if (candlestick.getId()*1000 != dayHour)
+        if (!isRightMarketData(candlestick,slumpRequest.getCandlestickIntervalEnum()))
         {
-            log.warn("id->{} > dayHour->{} ",candlestick.getId(),dayHour);
+            log.warn("id->{} > now->{} ",candlestick.getId(),System.currentTimeMillis());
             return null;
         }
 
@@ -85,6 +84,26 @@ public class MarketSlumpChangeService {
         }
         return result;
     }
+
+    private boolean isRightMarketData(Candlestick candlestick,com.cf.crs.huobi.constant.enums.CandlestickIntervalEnum candlestickIntervalEnum)
+    {
+        long now =System.currentTimeMillis();
+        switch (candlestickIntervalEnum)
+        {
+            case MIN30:
+            {
+                long between= now-candlestick.getId().longValue()*1000;
+                return (between>30*60*1000 &&  between<60*60*1000);
+            }
+            case MIN60:
+            {
+                long between= now-candlestick.getId().longValue()*1000;
+                return (between>60*60*1000 &&  between<2*60*60*1000);
+            }
+            default: return false;
+        }
+    }
+
 
     /**
      * 生成挂单订单
@@ -113,7 +132,14 @@ public class MarketSlumpChangeService {
         buyLimit.setSellPrice(sellPrice.toString());
 
         //撤单时间为下下单时间的下一个小时，也是行情的下下个小时(改为55分钟)
-        buyLimit.setCancelTime(candlestick.getId()*1000+ 55 * 60*1000);
+        buyLimit.setCancelTime(candlestick.getId()*1000+ getCanceTime(slumpRequest.getCandlestickIntervalEnum()));
+
+        buyLimit.setCreateTime(System.currentTimeMillis());
+        buyLimit.setApiKey(accountService.getApiKey());
+        buyLimit.setSecretKey(accountService.getSecretKey());
+        buyLimit.setMarketPrice(String.valueOf(candlestick.getLow()));
+        buyLimit.setDumpValue(String.valueOf(slumpPointEnum.getSlumpPoint()));
+        buyLimit.setSellPoint(String.valueOf(slumpPointEnum.getSellPoint()));
 
         //此key是按时间+symbol+暴跌百分比 MD5
         String oop=candlestick.getId()+":"+buyLimit.getSymbol()+":"+slumpPointEnum.getSlumpPoint();
@@ -121,6 +147,15 @@ public class MarketSlumpChangeService {
         return buyLimit;
     }
 
+    private long getCanceTime(com.cf.crs.huobi.constant.enums.CandlestickIntervalEnum candlestickIntervalEnum)
+    {
+            switch (candlestickIntervalEnum)
+            {
+                case MIN30: return (27+30) * 60*1000;
+                case MIN60: return (55+60) * 60*1000;
+                default: return System.currentTimeMillis();
+            }
+    }
     public void saveSucOrders()
     {
         long now =System.currentTimeMillis();
@@ -138,6 +173,6 @@ public class MarketSlumpChangeService {
      * 处理卖单成交情况
      */
     public void synSelled() {
-       // tradeService.updatSelled();
+        tradeService.updatSelled();
     }
 }

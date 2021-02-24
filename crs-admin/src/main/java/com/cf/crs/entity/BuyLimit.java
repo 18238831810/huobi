@@ -99,5 +99,14 @@ public class BuyLimit {
      */
     private String marketId;
 
+    private String marketPrice;
+    /**
+     * 暴跌点数
+     */
+    private String dumpValue;
+    /**
+     * 卖出点数
+     */
+    private String sellPoint;
 
 }

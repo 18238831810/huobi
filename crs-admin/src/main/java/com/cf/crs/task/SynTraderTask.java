@@ -22,26 +22,21 @@ public class SynTraderTask implements ITask{
     @Autowired
     MarketSlumpChangeService marketSlumpChangeService;
 
-    @Autowired
-    TradeService tradeService;
-
     @Override
     public void run(String params) {
         try {
-            log.info("同步用户信息计划开始执行");
             saveSlumpChangeOrders(params);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
     }
 
-
     private void saveSlumpChangeOrders(String param)
     {
         //根据行情下挂单
         if("slump_orders".equalsIgnoreCase(param))
         {
-            double totalUsdt=500;
+            double totalUsdt=900;
             CoinsEnum[] coinsEnums= CoinsEnum.values();
             for (CoinsEnum coinsEnum:coinsEnums) {
                 SlumpRequest slumpRequest = SlumpRequest.builder().candlestickIntervalEnum(CandlestickIntervalEnum.MIN60).coinsEnum(coinsEnum).totalUsdt(totalUsdt).build();
@@ -53,7 +48,7 @@ public class SynTraderTask implements ITask{
         {
             marketSlumpChangeService.saveSucOrders();
         }
-        else if("slump_sell_suc".equalsIgnoreCase(param))
+        else if("slump_sell_total".equalsIgnoreCase(param))
         {
             marketSlumpChangeService.synSelled();
         }

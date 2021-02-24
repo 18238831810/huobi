@@ -4,6 +4,7 @@ package com.cf.crs.service;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.cf.crs.entity.BuyLimit;
 import com.cf.crs.entity.OrderEntity;
 import com.cf.crs.entity.SellLimit;
@@ -209,6 +210,26 @@ public class TradeService implements AbstractHuobiPraramService {
             log.error("必须处理的【更新买单时出错】error->{} id->{} status->{}", id, status);
         }
 
+    }
+
+    /**
+     * 更新卖出量
+     */
+    public void updatSelled() {
+        for (int i = 0; i < Integer.MAX_VALUE; i++) {
+            int offset=10*i;
+            List<SellLimit>  list=  sellLimitMapper.selectList(new QueryWrapper<SellLimit>().eq("status", 0).last("limit 10 offset "+offset));
+            if (CollectionUtils.isEmpty(list)) return;
+            for (SellLimit sellLimit : list) {
+                TradeClient tradeClient = getTradeClient(sellLimit.getApiKey(), sellLimit.getSecretKey());
+                Order order = tradeClient.getOrder(Long.parseLong(sellLimit.getOrderId()));
+                UpdateWrapper updateWrapper=  new UpdateWrapper<SellLimit>().set("utime", System.currentTimeMillis()).set("selled_amount", order.getFilledAmount().toString()).eq("id", sellLimit.getId());
+                if (order.getFilledAmount().compareTo(order.getAmount()) == 0)
+                    updateWrapper.set("status", 1);
+                sellLimitMapper.update(null,updateWrapper);
+            }
+            if (list.size()<10) return;
+        }
     }
 
 }

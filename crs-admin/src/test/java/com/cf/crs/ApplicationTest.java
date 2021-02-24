@@ -39,24 +39,24 @@ public class ApplicationTest {
     public void testSlump()
     {
 
-        SlumpRequest  slumpRequest = SlumpRequest.builder().candlestickIntervalEnum(CandlestickIntervalEnum.MIN60)
+       /* SlumpRequest  slumpRequest = SlumpRequest.builder().candlestickIntervalEnum(CandlestickIntervalEnum.MIN30)
                 .coinsEnum(CoinsEnum.USDT_BTC).totalUsdt(500).build();
         List<BuyLimit> orderEntities= marketSlumpChangeService.getSlumpChangeOrders(slumpRequest);
         for (BuyLimit orderEntity:orderEntities) {
             System.out.println(orderEntity);
-        }
+        }*/
     }
 
     @Test
     public void testSaveSlump()
     {
-        double totalUsdt=500;
+        /*double totalUsdt=500;
         CoinsEnum[] coinsEnums= CoinsEnum.values();
         for (CoinsEnum coinsEnum:coinsEnums) {
 
         }
         SlumpRequest slumpRequest = SlumpRequest.builder().candlestickIntervalEnum(CandlestickIntervalEnum.MIN60).coinsEnum(CoinsEnum.USDT_BTC).totalUsdt(totalUsdt).build();
-        marketSlumpChangeService.saveSlumpChangeOrders(slumpRequest);
+        marketSlumpChangeService.saveSlumpChangeOrders(slumpRequest);*/
     }
 
     /**
@@ -99,5 +99,10 @@ public class ApplicationTest {
     public void setSeller()
     {
         marketSlumpChangeService.saveSucOrders();
+    }
+    @Test
+    public void synSelled()
+    {
+        marketSlumpChangeService.synSelled();
     }
 }
