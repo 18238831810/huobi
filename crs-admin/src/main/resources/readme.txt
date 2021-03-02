@@ -1,0 +1,30 @@
+{
+    "totalUsdt":900,
+    "candlestickInterval":"MIN30",
+    "symbol":[
+        "btcusdt",
+        "ethusdt"
+    ],
+    "slumpPoint":[
+        {
+            "slumpPoint":3.5,
+            "capitalPoint":0.1,
+            "sellPoint":4.5
+        },
+        {
+            "slumpPoint":5,
+            "capitalPoint":0.15,
+            "sellPoint":6.5
+        },
+        {
+            "slumpPoint":7,
+            "capitalPoint":0.2,
+            "sellPoint":7.5
+        },
+        {
+            "slumpPoint":10,
+            "capitalPoint":0.5,
+            "sellPoint":8.5
+        }
+    ]
+}

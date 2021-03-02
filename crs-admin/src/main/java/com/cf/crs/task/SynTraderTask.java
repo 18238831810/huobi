@@ -1,11 +1,7 @@
 package com.cf.crs.task;
 
-import com.cf.crs.huobi.constant.enums.CandlestickIntervalEnum;
 import com.cf.crs.job.task.ITask;
-import com.cf.crs.service.TradeService;
-import com.cf.crs.service.market.CoinsEnum;
-import com.cf.crs.service.market.MarketSlumpChangeService;
-import com.cf.crs.service.market.SlumpRequest;
+import com.cf.crs.service.marketv2.SlumpMarketService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -20,7 +16,7 @@ import org.springframework.stereotype.Component;
 public class SynTraderTask implements ITask{
 
     @Autowired
-    MarketSlumpChangeService marketSlumpChangeService;
+    SlumpMarketService slumpMarketService;
 
     @Override
     public void run(String params) {
@@ -33,25 +29,26 @@ public class SynTraderTask implements ITask{
 
     private void saveSlumpChangeOrders(String param)
     {
-        //根据行情下挂单
-        if("slump_orders".equalsIgnoreCase(param))
+        if(GloabConsts.ALLOW_RUNNING)
         {
-            double totalUsdt=900;
-            CoinsEnum[] coinsEnums= CoinsEnum.values();
-            for (CoinsEnum coinsEnum:coinsEnums) {
-                SlumpRequest slumpRequest = SlumpRequest.builder().candlestickIntervalEnum(CandlestickIntervalEnum.MIN60).coinsEnum(coinsEnum).totalUsdt(totalUsdt).build();
-                marketSlumpChangeService.saveSlumpChangeOrders(slumpRequest);
+            //根据行情下挂单
+            if("slump_orders".equalsIgnoreCase(param))
+            {
+                slumpMarketService.saveSlumpOrders();
+            }
+            //查询库中的订单是否已经下单成功
+            else if("slump_seller".equalsIgnoreCase(param))
+            {
+                slumpMarketService.saveSucOrders();
+            }
+            else if("slump_sell_total".equalsIgnoreCase(param))
+            {
+                slumpMarketService.synSelled();
             }
         }
-        //查询库中的订单是否已经下单成功
-        else if("slump_seller".equalsIgnoreCase(param))
-        {
-            marketSlumpChangeService.saveSucOrders();
-        }
-        else if("slump_sell_total".equalsIgnoreCase(param))
-        {
-            marketSlumpChangeService.synSelled();
-        }
+        else
+            log.warn("ALLOW_RUNNING->{}",GloabConsts.ALLOW_RUNNING);
+
     }
 
 

@@ -58,16 +58,19 @@ public class SellLimit {
      */
     private int status;
 
+    /**
+     * 买入总价
+     */
     private String total;
+
     /**
      * 基于哪一个K线行情下的单
      */
     private String marketId;
-
     /**
      * 已卖出量
      */
-    private String selled_amount;
+    private String selledAmount;
 
     private long utime=0;
 

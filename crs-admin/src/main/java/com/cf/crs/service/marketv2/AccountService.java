@@ -1,4 +1,4 @@
-package com.cf.crs.service;
+package com.cf.crs.service.marketv2;
 
 
 import com.alibaba.fastjson.JSON;
@@ -18,7 +18,7 @@ import java.util.List;
  */
 @Slf4j
 @Service
-public class AccountService   implements   AbstractHuobiPraramService{
+public class AccountService {
 
 
     /**
@@ -29,9 +29,6 @@ public class AccountService   implements   AbstractHuobiPraramService{
      */
     public AccountClient getAccountClient(String apiKey,String secretKey){
         return AccountClient.create(HuobiOptions.builder().apiKey(apiKey).secretKey(secretKey).build());
-    }
-    public AccountClient getAccountClient(){
-        return getAccountClient(apiKey,secretKey);
     }
 
     /**
@@ -48,9 +45,6 @@ public class AccountService   implements   AbstractHuobiPraramService{
         return list.get(0);
     }
 
-    public Account getAccount(){
-        return getAccount(apiKey,secretKey);
-    }
 
     /**
      * 获取账户余额
@@ -63,11 +57,5 @@ public class AccountService   implements   AbstractHuobiPraramService{
         Account account = getAccount(apiKey, secretKey);
         return accountClient.getAccountBalance(AccountBalanceRequest.builder().accountId(account.getId()).build());
     }
-
-    public AccountBalance getAccountBalance(){
-        return getAccountBalance(apiKey, secretKey);
-    }
-
-
 
 }

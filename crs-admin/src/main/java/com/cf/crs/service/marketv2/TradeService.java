@@ -1,17 +1,14 @@
-package com.cf.crs.service;
+package com.cf.crs.service.marketv2;
 
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.cf.crs.entity.BuyLimit;
-import com.cf.crs.entity.OrderEntity;
 import com.cf.crs.entity.SellLimit;
 import com.cf.crs.huobi.client.TradeClient;
 import com.cf.crs.huobi.client.req.trade.CreateOrderRequest;
 import com.cf.crs.huobi.constant.HuobiOptions;
-import com.cf.crs.huobi.model.account.Account;
 import com.cf.crs.huobi.model.trade.Order;
 import com.cf.crs.mapper.BuyLimitMapper;
 import com.cf.crs.mapper.SellLimitMapper;
@@ -28,7 +25,7 @@ import java.util.List;
  */
 @Slf4j
 @Service
-public class TradeService implements AbstractHuobiPraramService {
+public class TradeService  {
 
 
     @Autowired
@@ -52,9 +49,6 @@ public class TradeService implements AbstractHuobiPraramService {
         return TradeClient.create(HuobiOptions.builder().apiKey(apiKey).secretKey(secretKey).build());
     }
 
-    public TradeClient getTradeClient() {
-        return getTradeClient(apiKey, secretKey);
-    }
 
     /**
      * 限价下单
@@ -63,7 +57,7 @@ public class TradeService implements AbstractHuobiPraramService {
      */
     public Long createOrder(BuyLimit buyLimit) {
         try {
-            Long orderId = getTradeClient().createOrder(CreateOrderRequest.spotBuyLimit(buyLimit.getAccountId(), buyLimit.getSymbol(), new BigDecimal(buyLimit.getPrice()), new BigDecimal(buyLimit.getAmount())));
+            Long orderId = getTradeClient(buyLimit.getApiKey(),buyLimit.getSecretKey()).createOrder(CreateOrderRequest.spotBuyLimit(buyLimit.getAccountId(), buyLimit.getSymbol(), new BigDecimal(buyLimit.getPrice()), new BigDecimal(buyLimit.getAmount())));
             buyLimit.setOrderId(orderId);
             buyLimitMapper.insert(buyLimit);
             return orderId;
@@ -80,7 +74,7 @@ public class TradeService implements AbstractHuobiPraramService {
      * @param buyLimit
      */
     public void createSellOrder(BuyLimit buyLimit, long now) {
-        TradeClient tradeClient = getTradeClient();
+        TradeClient tradeClient = getTradeClient(buyLimit.getApiKey(),buyLimit.getSecretKey());
         Order order = tradeClient.getOrder(buyLimit.getOrderId());
         //如果到时间还没有任何成交，直播取消
         if (order.getFilledAmount().compareTo(BigDecimal.ZERO) == 0 && (buyLimit.getCancelTime() < now)) {
