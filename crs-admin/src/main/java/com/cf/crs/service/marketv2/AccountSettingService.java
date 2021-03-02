@@ -52,14 +52,14 @@ public class AccountSettingService  {
     private List<SlumpMarketPoint> getSlumpPoint(JSONObject json)
     {
         List<SlumpMarketPoint> result=new ArrayList();
-        JSONArray jsonArray= json.getJSONArray("slump_point");
+        JSONArray jsonArray= json.getJSONArray("points");
        for (int i=0;i<jsonArray.size();i++)
        {
            JSONObject jsonObject= jsonArray.getJSONObject(i);
            SlumpMarketPoint slumpMarketPoint= SlumpMarketPoint.builder()
                    .slumpPoint(jsonObject.getDouble("slump_point"))
-                   .sellPoint(jsonObject.getDouble("slump_point"))
-                   .capitalPoint(jsonObject.getDouble("sell_point"))
+                   .sellPoint(jsonObject.getDouble("sell_point"))
+                   .capitalPoint(jsonObject.getDouble("capital_point"))
                    .build();
            result.add(slumpMarketPoint);
        }
