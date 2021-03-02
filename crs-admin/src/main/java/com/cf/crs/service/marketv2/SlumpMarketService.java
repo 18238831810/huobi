@@ -177,7 +177,7 @@ public class SlumpMarketService {
         buyLimit.setApiKey(slumpMarket.getAccountSetting().getApiKey());
         buyLimit.setSecretKey(slumpMarket.getAccountSetting().getSecretKey());
         buyLimit.setMarketPrice(String.valueOf(candlestick.getLow()));
-        buyLimit.setDumpValue(String.valueOf(slumpMarket.getSlumpMarketPoints()));
+        buyLimit.setDumpValue(String.valueOf(slumpMarketPoint.getSlumpPoint()));
         buyLimit.setSellPoint(String.valueOf(slumpMarketPoint.getSellPoint()));
 
         //此key是按时间+symbol+暴跌百分比 MD5
