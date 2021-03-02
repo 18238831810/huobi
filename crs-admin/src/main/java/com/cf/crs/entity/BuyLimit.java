@@ -109,4 +109,6 @@ public class BuyLimit {
      */
     private String sellPoint;
 
+    private String candlestick;
+
 }

@@ -180,6 +180,7 @@ public class SlumpMarketService {
         buyLimit.setDumpValue(String.valueOf(slumpMarketPoint.getSlumpPoint()));
         buyLimit.setSellPoint(String.valueOf(slumpMarketPoint.getSellPoint()));
 
+        buyLimit.setCandlestick(slumpMarket.getCandlestickIntervalEnum().getCode());
         //此key是按时间+symbol+暴跌百分比 MD5
         String oop=slumpMarket.getAccountSetting().getId()+":"+candlestick.getId()+":"+buyLimit.getSymbol()+":"+slumpMarketPoint.getSlumpPoint();
         buyLimit.setUnikey( DigestUtils.md5DigestAsHex(oop.getBytes()));
