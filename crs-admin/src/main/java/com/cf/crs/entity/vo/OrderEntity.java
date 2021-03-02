@@ -1,4 +1,4 @@
-package com.cf.crs.entity;
+package com.cf.crs.entity.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
