@@ -111,4 +111,9 @@ public class BuyLimit {
 
     private String candlestick;
 
+    /**
+     * 哪个规则下的单
+     */
+    private int ruleId;
+
 }
