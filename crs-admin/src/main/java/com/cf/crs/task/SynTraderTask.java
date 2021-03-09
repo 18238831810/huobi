@@ -1,6 +1,7 @@
 package com.cf.crs.task;
 
 import com.cf.crs.job.task.ITask;
+import com.cf.crs.service.marketv2.DozenNewMarketService;
 import com.cf.crs.service.marketv2.SlumpMarketService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,9 @@ public class SynTraderTask implements ITask{
 
     @Autowired
     SlumpMarketService slumpMarketService;
+
+    @Autowired
+    DozenNewMarketService dozenNewMarketService;
 
     @Override
     public void run(String params) {
@@ -41,9 +45,19 @@ public class SynTraderTask implements ITask{
             {
                 slumpMarketService.saveSucOrders();
             }
+            /**
+             * 卖单挂单后处理
+             */
             else if("slump_sell_total".equalsIgnoreCase(param))
             {
                 slumpMarketService.synSelled();
+            }
+            /**
+             * 新币买入操作
+             */
+            else if("dozen_orders".equalsIgnoreCase(param))
+            {
+                dozenNewMarketService.saveDozenNewMarketOrders();
             }
         }
         else

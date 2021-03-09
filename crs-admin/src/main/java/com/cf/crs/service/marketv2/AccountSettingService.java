@@ -2,6 +2,7 @@ package com.cf.crs.service.marketv2;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.cf.crs.entity.AccountSetting;
+import com.cf.crs.entity.vo.DozenNewOrder;
 import com.cf.crs.entity.vo.SlumpMarket;
 import com.cf.crs.entity.vo.SlumpMarketPoint;
 import com.cf.crs.huobi.constant.enums.CandlestickIntervalEnum;
@@ -27,7 +28,7 @@ public class AccountSettingService  {
     public List<SlumpMarket> getSlumpMarket()
     {
         List<SlumpMarket> result=null;
-        List<AccountSetting>  accountSettingList= accountSettingMapper.selectList(new QueryWrapper<AccountSetting>().eq("status",1));
+        List<AccountSetting>  accountSettingList= accountSettingMapper.selectList(new QueryWrapper<AccountSetting>().eq("status",1).eq("type","slump"));
         if(!CollectionUtils.isEmpty(accountSettingList))
         {
             result = new ArrayList();
@@ -37,6 +38,37 @@ public class AccountSettingService  {
         }
         return result;
     }
+
+    public List<DozenNewOrder> getDozenNewMarket()
+    {
+        List<DozenNewOrder> result=null;
+        List<AccountSetting>  accountSettingList= accountSettingMapper.selectList(new QueryWrapper<AccountSetting>().eq("status",0).eq("type","dozen"));
+        if(!CollectionUtils.isEmpty(accountSettingList))
+        {
+            result = new ArrayList();
+            for (AccountSetting accountSetting:accountSettingList) {
+                result.add(getDozenNewOrders(accountSetting));
+            }
+        }
+        return result;
+    }
+
+    private DozenNewOrder getDozenNewOrders(AccountSetting accountSetting) {
+        JSONObject jsonObject = JSONObject.fromObject(accountSetting.getJson());
+        DozenNewOrder dozenNewOrder = new DozenNewOrder();
+        dozenNewOrder.setSymbol(jsonObject.getString("symbol"));
+        dozenNewOrder.setAccountSetting(accountSetting);
+        JSONArray jsonArray =  JSONObject.fromObject(accountSetting.getJson()).getJSONArray("orders");
+        for (int i = 0; i < jsonArray.size(); i++) {
+            DozenNewOrder.DozenNew dozenNew = new DozenNewOrder().new DozenNew();
+            dozenNew.setPrice(jsonArray.getJSONObject(i).getDouble("price"));
+            dozenNew.setTotalUsdt(jsonArray.getJSONObject(i).getDouble("total_usdt"));
+            dozenNew.setId(jsonArray.getJSONObject(i).getString("id"));
+            dozenNewOrder.getOrders().add(dozenNew);
+        }
+        return dozenNewOrder;
+    }
+
     private SlumpMarket getSlumpMarket(AccountSetting accountSetting)
     {
         JSONObject jsonObject =JSONObject.fromObject(accountSetting.getJson());

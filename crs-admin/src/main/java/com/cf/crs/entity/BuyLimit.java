@@ -115,5 +115,4 @@ public class BuyLimit {
      * 哪个规则下的单
      */
     private int ruleId;
-
 }

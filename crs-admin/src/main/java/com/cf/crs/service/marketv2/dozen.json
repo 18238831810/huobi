@@ -1,0 +1,16 @@
+{
+  "symbol":"usdt",
+  "amount_scale":2,
+  "orders":[
+    {
+      "id":1,
+      "total_usdt":100,
+      "price":1
+    },
+    {
+      "id":2,
+      "total_usdt":100,
+      "price":2
+    }
+  ]
+}

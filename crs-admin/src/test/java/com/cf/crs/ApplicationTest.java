@@ -4,6 +4,7 @@ package com.cf.crs;
 import com.cf.crs.entity.BuyLimit;
 import com.cf.crs.huobi.client.TradeClient;
 import com.cf.crs.service.marketv2.AccountService;
+import com.cf.crs.service.marketv2.DozenNewMarketService;
 import com.cf.crs.service.marketv2.SlumpMarketService;
 import com.cf.crs.service.marketv2.TradeService;
 import org.junit.Test;
@@ -26,11 +27,15 @@ public class ApplicationTest {
     @Autowired
     SlumpMarketService slumpMarketService;
 
+    @Autowired
+    DozenNewMarketService dozenNewMarketService;
+
     @Test
     public void testSlump()
     {
 
-        slumpMarketService.saveSlumpOrders();
+        //slumpMarketService.saveSlumpOrders();
+        dozenNewMarketService.saveDozenNewMarketOrders();
     }
 
     @Test

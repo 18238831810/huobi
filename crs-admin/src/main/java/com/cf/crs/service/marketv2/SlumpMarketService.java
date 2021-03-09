@@ -42,7 +42,6 @@ public class SlumpMarketService {
         for (SlumpMarket slumpMarket:accountSettingList) {
             saveSlumpOrders( slumpMarket );
         }
-
     }
 
     public void saveSlumpOrders(SlumpMarket slumpMarket )

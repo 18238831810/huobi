@@ -34,4 +34,8 @@ public class AccountSetting {
      * 用户的ID
      */
     private int uid;
+  /**
+   * 当前类型
+   */
+ private String type;
 }
