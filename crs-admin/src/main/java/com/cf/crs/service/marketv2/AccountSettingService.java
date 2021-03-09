@@ -42,7 +42,7 @@ public class AccountSettingService  {
     public List<DozenNewOrder> getDozenNewMarket()
     {
         List<DozenNewOrder> result=null;
-        List<AccountSetting>  accountSettingList= accountSettingMapper.selectList(new QueryWrapper<AccountSetting>().eq("status",0).eq("type","dozen"));
+        List<AccountSetting>  accountSettingList= accountSettingMapper.selectList(new QueryWrapper<AccountSetting>().eq("status",1).eq("type","dozen"));
         if(!CollectionUtils.isEmpty(accountSettingList))
         {
             result = new ArrayList();
