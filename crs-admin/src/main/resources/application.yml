@@ -15,7 +15,7 @@ server:
 spring:
   # 环境 dev|test|prod
   profiles:
-    active: dev
+    active: uat
   messages:
     encoding: UTF-8
     basename: i18n/messages
@@ -53,7 +53,7 @@ mybatis-plus:
     banner: false
   #原生配置
   configuration:
-    map-underscore-to-camel-case: false
+    map-underscore-to-camel-case: true
     cache-enabled: false
     call-setters-on-nulls: true
     jdbc-type-for-null: 'null'

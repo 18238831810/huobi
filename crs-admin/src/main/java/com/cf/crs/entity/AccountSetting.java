@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 @TableName("account_setting")
 public class AccountSetting {
-   @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.AUTO)
     private int id;
     /**
      * 火币
@@ -34,8 +34,8 @@ public class AccountSetting {
      * 用户的ID
      */
     private int uid;
-  /**
-   * 当前类型
-   */
- private String type;
+    /**
+     * 当前类型
+     */
+    private String type;
 }
