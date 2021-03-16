@@ -191,8 +191,8 @@ public class SlumpMarketService {
     {
             switch (candlestickIntervalEnum)
             {
-                case MIN30: return 2*30 * 60*1000-3*60*1000;
-                case MIN60: return 2*60*60*1000-5*60*1000;
+                case MIN30: return 2*30 * 60*1000-2*60*1000;
+                case MIN60: return 2*60*60*1000-3*60*1000;
                 case HOUR4:return  2*4*60*60*1000-5*60*1000;
                 case DAY1:return   2*24*60*60*1000-5*60*1000;
                 case WEEK1:return  2*30*24*60*60*1000-5*60*1000;

@@ -41,6 +41,8 @@ public class DozenNewMarketService {
         }
     }
 
+
+
     public  List<BuyLimit> getDozenNewMarketOrders(DozenNewOrder dozenNewOrder) {
         List<BuyLimit> list = new ArrayList();
         for (DozenNewOrder.DozenNew dozenNew : dozenNewOrder.getOrders()) {
@@ -62,7 +64,29 @@ public class DozenNewMarketService {
         for (BuyLimit buyLimit:list) {
             if(tradeService.getByUnitKey(buyLimit.getUnikey())!=null) continue;
             buyLimit.setAccountId(account.getId());
-            tradeService.createOrder(buyLimit);
+            loopTrader( buyLimit);
+        }
+    }
+
+    private void  loopTrader(BuyLimit buyLimit) {
+        while(true)
+        {
+            Long orderId = tradeService.createOrder(buyLimit);
+            if(orderId!=null)
+            {
+                log.warn("orderId->{},Amount->{},Price->{},symbol->{}",orderId,buyLimit.getAmount(),buyLimit.getPrice(),buyLimit.getSymbol());
+                break;
+            }
+            else
+            {
+                try
+                {
+                    Thread.sleep(100);
+                }catch (Exception e)
+                {
+                    log.error(e.getMessage());
+                }
+            }
         }
     }
 

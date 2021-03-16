@@ -63,7 +63,8 @@ public class TradeService  {
             return orderId;
         } catch (Exception e) {
             log.info("限价下单失败:{}", JSON.toJSONString(buyLimit));
-            log.error(e.getMessage(), e);
+           // log.error(e.getMessage(), e);
+            log.error("error->{}",e.getMessage());
             return null;
         }
     }
