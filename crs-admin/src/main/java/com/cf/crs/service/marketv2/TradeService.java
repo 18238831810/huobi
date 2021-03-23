@@ -149,7 +149,9 @@ public class TradeService  {
             for (SellLimit sellLimit : list) {
                 total.add(new BigDecimal(sellLimit.getAmount()));
             }
-        return new BigDecimal(buyLimit.getAmount()).multiply(FEI).setScale(BigDecimal.ROUND_DOWN).subtract(total);
+        int scale= buyLimit.getAmount().substring(buyLimit.getAmount().indexOf(".")).length()-1;
+        if(scale<=0) return null;
+        return new BigDecimal(buyLimit.getAmount()).multiply(FEI).setScale(scale,BigDecimal.ROUND_DOWN).subtract(total);
     }
 
     private static final BigDecimal FEI=BigDecimal.valueOf(0.998);
