@@ -150,7 +150,10 @@ public class TradeService  {
                 total.add(new BigDecimal(sellLimit.getAmount()));
             }
         int scale= buyLimit.getAmount().substring(buyLimit.getAmount().indexOf(".")).length()-1;
-        if(scale<=0) return null;
+        if(scale<=0){
+            log.error("amount ->{} scale is error",buyLimit.getAmount() ,scale);
+            return null;
+        }
         return new BigDecimal(buyLimit.getAmount()).multiply(FEI).setScale(scale,BigDecimal.ROUND_DOWN).subtract(total);
     }
 
