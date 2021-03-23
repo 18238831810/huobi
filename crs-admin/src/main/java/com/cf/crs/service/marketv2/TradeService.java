@@ -149,9 +149,10 @@ public class TradeService  {
             for (SellLimit sellLimit : list) {
                 total.add(new BigDecimal(sellLimit.getAmount()));
             }
-        return new BigDecimal(buyLimit.getAmount()).subtract(total);
+        return new BigDecimal(buyLimit.getAmount()).multiply(FEI).setScale(BigDecimal.ROUND_DOWN).subtract(total);
     }
 
+    private static final BigDecimal FEI=BigDecimal.valueOf(0.998);
 
     public BuyLimit getByUnitKey(String unikey) {
         return buyLimitMapper.selectOne(new QueryWrapper<BuyLimit>().eq("unikey", unikey).last(" limit 1"));
