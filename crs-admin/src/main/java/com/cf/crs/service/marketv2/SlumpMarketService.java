@@ -76,7 +76,7 @@ public class SlumpMarketService {
                     .interval(slumpMarket.getCandlestickIntervalEnum())
                     .size(2).build();
             List<Candlestick> candlestickList = huobiMarketService.getCandlestick(candlestickRequest);
-            if (CollectionUtils.isEmpty(candlestickList) && candlestickList.size()!=2)
+            if (CollectionUtils.isEmpty(candlestickList) || candlestickList.size()!=2)
             {
                 log.warn("symbol->{} Interval->{} 's Candlestick is null",symbol,slumpMarket.getCandlestickIntervalEnum().getCode());
                 continue;
